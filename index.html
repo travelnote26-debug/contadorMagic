@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Contador de vida para Magic: The Gathering">
+  <meta name="theme-color" content="#1C1917">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Contador Magic">
+  <title>Contador Magic</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <noscript>
+    <div class="noscript">Contador Magic necesita JavaScript para funcionar.</div>
+  </noscript>
+
+  <div id="board"></div>
+
+  <button id="settings-rune" aria-label="Opciones" title="Opciones">
+    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M18 3 L32.27 13.37 L24.42 20.09 L26.82 30.14 L18 24.75 L9.18 30.14 L11.58 20.09 L3.73 13.37 L9.18 5.86 L18 3 L26.82 5.86 Z"
+        fill="none" stroke="#D4AF37" stroke-width="1.5"/>
+      <circle cx="18" cy="18" r="3" fill="#D4AF37"/>
+    </svg>
+  </button>
+
+  <div id="settings-sheet" hidden>
+    <button id="sheet-close" aria-label="Cerrar opciones" title="Cerrar">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M6 6 L18 18 M18 6 L6 18" stroke="#8B6914" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Opciones</div>
+    <div class="sheet-divider"></div>
+
+    <div class="setting-section">
+      <div class="section-title">Reiniciar Partida</div>
+      <button class="parchment-btn red" id="btn-reset">Reiniciar</button>
+    </div>
+
+    <div class="setting-section">
+      <div class="section-title">Jugadores</div>
+      <div class="num-row">
+        <button class="num-btn" id="players-minus" aria-label="Menos jugadores">&#x2212;</button>
+        <span class="num-label" id="players-label">4 jugadores</span>
+        <button class="num-btn" id="players-plus" aria-label="Mas jugadores">+</button>
+      </div>
+    </div>
+
+    <div class="setting-section">
+      <div class="section-title">Vidas Iniciales</div>
+      <div class="num-row">
+        <button class="num-btn" id="life-minus" aria-label="Menos vidas">&#x2212;</button>
+        <span class="num-label" id="life-label">21 vidas</span>
+        <button class="num-btn" id="life-plus" aria-label="Mas vidas">+</button>
+      </div>
+    </div>
+
+    <div class="setting-section">
+      <div class="section-title">Jugador Inicial</div>
+      <button class="parchment-btn" id="roulette-btn">Elegir jugador inicial</button>
+    </div>
+
+    <div class="setting-section">
+      <div class="section-title">Equipos</div>
+      <div class="teams-row">
+        <span class="teams-label">Modo equipos</span>
+        <button class="switch" id="teams-switch" role="switch" aria-checked="false">
+          <span class="knob"></span>
+        </button>
+      </div>
+      <div id="teams-count-wrap" hidden style="margin-top:8px">
+        <div class="num-row">
+          <button class="num-btn" id="teams-minus" aria-label="Menos equipos">&#x2212;</button>
+          <span class="num-label" id="teams-label">2 equipos</span>
+          <button class="num-btn" id="teams-plus" aria-label="Mas equipos">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dialog-backdrop" hidden>
+    <div class="dialog">
+      <div class="dialog-title">Reiniciar Partida</div>
+      <div class="dialog-text">Se resetearan las vidas de todos los jugadores a los valores iniciales. Estas seguro?</div>
+      <div class="dialog-actions">
+        <button class="dialog-btn cancel" id="dialog-cancel">Cancelar</button>
+        <button class="dialog-btn confirm" id="dialog-confirm">Reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/state.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/mana.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
