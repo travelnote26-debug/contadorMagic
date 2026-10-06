@@ -501,8 +501,8 @@ function syncSettingsUI() {
 
   dayNightBtn.hidden = !state.dayNightEnabled;
   const isNight = state.isNight !== false;
-  dayNightBtn.querySelector(".dn-moon").hidden = !isNight;
-  dayNightBtn.querySelector(".dn-sun").hidden = isNight;
+  dayNightBtn.querySelector(".dn-moon").toggleAttribute("hidden", !isNight);
+  dayNightBtn.querySelector(".dn-sun").toggleAttribute("hidden", isNight);
 
   document.querySelectorAll(".preset-btn").forEach((b) => {
     b.classList.toggle("on", Number(b.dataset.life) === state.initialLife);
