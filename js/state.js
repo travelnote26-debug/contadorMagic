@@ -23,6 +23,9 @@ function createInitialState() {
     teamsEnabled: false,
     teamCount: 2,
     commanderMode: false,
+    poisonMode: false,
+    dayNightEnabled: false,
+    isNight: true,
     history: [],
     startingPlayerId: null
   };
@@ -35,7 +38,8 @@ function createPlayers(playerCount, initialLife) {
     currentLife: initialLife,
     color: MagicColors[i % MagicColors.length].key,
     team: null,
-    cmdDamage: {}
+    cmdDamage: {},
+    poison: 0
   }));
 }
 
@@ -142,6 +146,41 @@ function maxCommanderDamage(p) {
   return values.length ? Math.max(...values) : 0;
 }
 
+function setPoisonMode(on) {
+  if (on === !!state.poisonMode) return;
+  state = { ...state, poisonMode: !!on };
+  persist();
+  notify();
+}
+
+function addPoison(playerId, delta) {
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) return;
+  const current = player.poison || 0;
+  const next = Math.max(0, Math.min(10, current + delta));
+  if (next === current) return;
+  modifyPlayer(playerId, (p) => ({ ...p, poison: next }));
+}
+
+function isEliminated(player, poisonMode) {
+  if (player.currentLife <= 0) return true;
+  return !!poisonMode && (player.poison || 0) >= 10;
+}
+
+function setDayNightMode(on) {
+  if (on === !!state.dayNightEnabled) return;
+  state = { ...state, dayNightEnabled: !!on };
+  persist();
+  notify();
+}
+
+function toggleDayNight() {
+  if (!state.dayNightEnabled) return;
+  state = { ...state, isNight: !state.isNight };
+  persist();
+  notify();
+}
+
 function setStartingPlayer(playerId) {
   state = { ...state, startingPlayerId: playerId };
   persist();
@@ -152,6 +191,7 @@ function playerToJson(p) {
   const obj = { id: p.id, name: p.name, currentLife: p.currentLife, color: p.color };
   if (p.team != null) obj.team = p.team;
   obj.cmdDamage = { ...(p.cmdDamage || {}) };
+  obj.poison = p.poison || 0;
   return obj;
 }
 
@@ -162,6 +202,9 @@ function serialize(st) {
     teamsEnabled: st.teamsEnabled,
     teamCount: st.teamCount,
     commanderMode: !!st.commanderMode,
+    poisonMode: !!st.poisonMode,
+    dayNightEnabled: !!st.dayNightEnabled,
+    isNight: st.isNight !== false,
     startingPlayerId: st.startingPlayerId != null ? st.startingPlayerId : null,
     players: st.players.map(playerToJson),
     history: st.history.slice(-MAX_HISTORY).map((list) => list.map(playerToJson))
@@ -173,14 +216,17 @@ function deserialize(json) {
     const r = JSON.parse(json);
     if (!r || !Array.isArray(r.players)) return null;
     return {
-      players: r.players.map((p) => ({ cmdDamage: {}, ...p })),
+      players: r.players.map((p) => ({ cmdDamage: {}, poison: 0, ...p })),
       initialLife: r.initialLife,
       playerCount: r.playerCount,
       teamsEnabled: r.teamsEnabled,
       teamCount: r.teamCount,
       commanderMode: !!r.commanderMode,
+      poisonMode: !!r.poisonMode,
+      dayNightEnabled: !!r.dayNightEnabled,
+      isNight: r.isNight !== false,
       history: (Array.isArray(r.history) ? r.history : []).map((list) =>
-        list.map((p) => ({ cmdDamage: {}, ...p }))
+        list.map((p) => ({ cmdDamage: {}, poison: 0, ...p }))
       ),
       startingPlayerId: r.startingPlayerId != null ? r.startingPlayerId : null
     };

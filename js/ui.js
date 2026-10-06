@@ -10,6 +10,7 @@ const boardEl = document.getElementById("board");
 const settingsSheet = document.getElementById("settings-sheet");
 const settingsRune = document.getElementById("settings-rune");
 const dialogBackdrop = document.getElementById("dialog-backdrop");
+const dayNightBtn = document.getElementById("daynight-btn");
 
 let sections = [];
 let lastKey = "";
@@ -54,8 +55,13 @@ class PlayerSection {
           <button class="life-btn plus" aria-label="Sumar vida">+</button>
         </div>
         <div class="mana-picker">${manaSymbolSVG(this.player.color, { size: 30 })}</div>
-        <div class="cmd-pill" hidden>
-          <span class="cmd-icon">&#x2694;</span><span class="cmd-val">0/21</span>
+        <div class="pills-top">
+          <div class="cmd-pill" hidden>
+            <span class="pill-icon">&#x2694;</span><span class="cmd-val">0/21</span>
+          </div>
+          <div class="poison-pill" hidden>
+            <span class="pill-icon">&#x2622;</span><span class="poison-val">0/10</span>
+          </div>
         </div>
         <div class="elim-badge" hidden>&#x2620; Fuera</div>
         <div class="team-badge" hidden></div>
@@ -66,7 +72,7 @@ class PlayerSection {
       <div class="cmd-overlay" hidden>
         <div class="cmd-card" style="transform:rotate(${this.rotation}deg)">
           <div class="cmd-head">
-            <span class="cmd-title">Daño de comandante</span>
+            <span class="cmd-title"></span>
             <button class="cmd-close" aria-label="Cerrar">&#x2715;</button>
           </div>
           <div class="cmd-rows"></div>
@@ -86,16 +92,20 @@ class PlayerSection {
     this.highlightEl = root.querySelector(".highlight");
     this.cmdPill = root.querySelector(".cmd-pill");
     this.cmdVal = root.querySelector(".cmd-val");
+    this.poisonPill = root.querySelector(".poison-pill");
+    this.poisonVal = root.querySelector(".poison-val");
     this.cmdOverlay = root.querySelector(".cmd-overlay");
     this.cmdRows = root.querySelector(".cmd-rows");
+    this.cmdTitle = root.querySelector(".cmd-title");
     this.elimBadge = root.querySelector(".elim-badge");
+    this.panelMode = null;
 
     root.querySelector(".minus").addEventListener("click", () => this.onLife(-1));
     root.querySelector(".plus").addEventListener("click", () => this.onLife(1));
     this.manaPickerEl.addEventListener("click", () => this.toggleColorPicker(true));
     this.bindLongPress();
     this.setupColorOverlay();
-    this.setupCmdPanel();
+    this.setupPanels();
   }
 
   onLife(delta) {
@@ -126,17 +136,28 @@ class PlayerSection {
     }
 
     const showCmd = !!state.commanderMode;
+    const showPoison = !!state.poisonMode;
     this.cmdPill.hidden = !showCmd;
+    this.poisonPill.hidden = !showPoison;
     if (showCmd) {
       const dmg = maxCommanderDamage(player);
       this.cmdVal.textContent = dmg + "/21";
       this.cmdPill.classList.toggle("over", dmg >= 21);
-      if (!this.cmdOverlay.hidden) this.renderCmdRows();
-    } else if (!this.cmdOverlay.hidden) {
-      this.toggleCmdPanel(false);
+    }
+    if (showPoison) {
+      const poison = player.poison || 0;
+      this.poisonVal.textContent = poison + "/10";
+      this.poisonPill.classList.toggle("over", poison >= 10);
+    }
+    if (!this.cmdOverlay.hidden) {
+      if ((this.panelMode === "cmd" && !showCmd) || (this.panelMode === "poison" && !showPoison)) {
+        this.togglePanel(false);
+      } else {
+        this.renderPanelRows();
+      }
     }
 
-    const eliminated = player.currentLife <= 0;
+    const eliminated = isEliminated(player, state.poisonMode);
     this.root.classList.toggle("eliminated", eliminated);
     this.elimBadge.hidden = !eliminated;
 
@@ -253,27 +274,46 @@ class PlayerSection {
     this.root.querySelectorAll(".life-btn").forEach((b) => b.classList.toggle("disabled", open));
   }
 
-  setupCmdPanel() {
-    this.cmdPill.addEventListener("click", () => this.toggleCmdPanel(true));
+  setupPanels() {
+    this.cmdPill.addEventListener("click", () => this.togglePanel(true, "cmd"));
+    this.poisonPill.addEventListener("click", () => this.togglePanel(true, "poison"));
     this.cmdOverlay.addEventListener("click", (e) => {
       const step = e.target.closest(".cmd-step");
       if (step) {
         if (navigator.vibrate) navigator.vibrate(10);
-        addCommanderDamage(this.player.id, Number(step.dataset.attacker), Number(step.dataset.delta));
+        if (this.panelMode === "poison") addPoison(this.player.id, Number(step.dataset.delta));
+        else addCommanderDamage(this.player.id, Number(step.dataset.attacker), Number(step.dataset.delta));
         return;
       }
-      if (e.target.closest(".cmd-close") || e.target === this.cmdOverlay) this.toggleCmdPanel(false);
+      if (e.target.closest(".cmd-close") || e.target === this.cmdOverlay) this.togglePanel(false);
     });
   }
 
-  toggleCmdPanel(open) {
-    if (open) this.renderCmdRows();
+  togglePanel(open, mode) {
+    if (open) {
+      this.panelMode = mode;
+      this.cmdTitle.textContent = mode === "poison" ? "Contador de veneno" : "Daño de comandante";
+      this.renderPanelRows();
+    } else {
+      this.panelMode = null;
+    }
     this.cmdOverlay.hidden = !open;
     this.root.querySelectorAll(".life-btn").forEach((b) => b.classList.toggle("disabled", open));
   }
 
-  renderCmdRows() {
+  renderPanelRows() {
     const me = this.player;
+    if (this.panelMode === "poison") {
+      const poison = me.poison || 0;
+      this.cmdRows.innerHTML =
+        `<div class="cmd-line">` +
+        `<span class="cmd-name">Veneno</span>` +
+        `<button class="cmd-step" data-delta="-1" aria-label="Restar veneno">&#x2212;</button>` +
+        `<span class="cmd-num${poison >= 10 ? " over" : ""}">${poison}</span>` +
+        `<button class="cmd-step" data-delta="1" aria-label="Sumar veneno">+</button>` +
+        `</div>`;
+      return;
+    }
     this.cmdRows.innerHTML = state.players
       .filter((p) => p.id !== me.id)
       .map((p) => {
@@ -451,6 +491,20 @@ function syncSettingsUI() {
   commanderSwitch.classList.toggle("on", !!state.commanderMode);
   commanderSwitch.setAttribute("aria-checked", String(!!state.commanderMode));
 
+  const poisonSwitch = document.getElementById("poison-switch");
+  poisonSwitch.classList.toggle("on", !!state.poisonMode);
+  poisonSwitch.setAttribute("aria-checked", String(!!state.poisonMode));
+
+  const dayNightSwitch = document.getElementById("daynight-switch");
+  dayNightSwitch.classList.toggle("on", !!state.dayNightEnabled);
+  dayNightSwitch.setAttribute("aria-checked", String(!!state.dayNightEnabled));
+
+  dayNightBtn.hidden = !state.dayNightEnabled;
+  const isNight = state.isNight !== false;
+  dayNightBtn.querySelector(".dn-moon").hidden = !isNight;
+  dayNightBtn.querySelector(".dn-sun").hidden = isNight;
+  dayNightBtn.classList.toggle("is-night", isNight);
+
   document.querySelectorAll(".preset-btn").forEach((b) => {
     b.classList.toggle("on", Number(b.dataset.life) === state.initialLife);
   });
@@ -504,6 +558,19 @@ function wireSettings() {
 
   document.getElementById("commander-switch").addEventListener("click", () => {
     setCommanderMode(!state.commanderMode);
+  });
+
+  document.getElementById("poison-switch").addEventListener("click", () => {
+    setPoisonMode(!state.poisonMode);
+  });
+
+  document.getElementById("daynight-switch").addEventListener("click", () => {
+    setDayNightMode(!state.dayNightEnabled);
+  });
+
+  dayNightBtn.addEventListener("click", () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+    toggleDayNight();
   });
 }
 

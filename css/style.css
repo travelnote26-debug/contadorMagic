@@ -337,11 +337,19 @@ body {
 }
 
 /* ---------- Commander damage / elimination ---------- */
-.cmd-pill {
+.pills-top {
   position: absolute;
   top: 14px;
   left: 14px;
   z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.cmd-pill,
+.poison-pill {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -359,11 +367,23 @@ body {
   pointer-events: auto;
 }
 
-.cmd-pill[hidden] {
+.poison-pill {
+  border-color: #558B2F;
+  color: #9CCC65;
+}
+
+.pill-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.cmd-pill[hidden],
+.poison-pill[hidden] {
   display: none;
 }
 
-.cmd-pill.over {
+.cmd-pill.over,
+.poison-pill.over {
   color: #FF6B6B;
   border-color: #B23A3A;
   animation: cmdPulse 1s ease-in-out infinite;
@@ -522,6 +542,40 @@ body {
 #settings-rune svg {
   width: 100%;
   height: 100%;
+}
+
+/* ---------- Day / night marker ---------- */
+#daynight-btn {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(26, 20, 16, 0.9);
+  border: 1.5px solid var(--gold-dark);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+#daynight-btn[hidden] {
+  display: none;
+}
+
+#daynight-btn .dn-icon {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+#daynight-btn .dn-icon[hidden] {
+  display: none;
 }
 
 /* ---------- Settings sheet ---------- */

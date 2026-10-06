@@ -158,15 +158,64 @@ assertEq(run("state.players[0].cmdDamage[3]"), 4, "undo revierte el ultimo daño
 run("resetGame();");
 assertEq(run("Object.keys(state.players[0].cmdDamage).length"), 0, "reset limpia el daño");
 
+console.log("== contador de veneno ==");
+run("setPoisonMode(true);");
+assertEq(run("state.poisonMode"), true, "modo veneno activado");
+assertEq(run("state.initialLife"), 40, "activar veneno no toca las vidas");
+assertEq(run("state.players.every(p => p.poison === 0)"), true, "veneno empieza a 0");
+run("addPoison(2, 3);");
+assertEq(run("state.players[1].poison"), 3, "veneno +3");
+run("addPoison(2, 20);");
+assertEq(run("state.players[1].poison"), 10, "veneno acotado a 10");
+run("addPoison(2, -100);");
+assertEq(run("state.players[1].poison"), 0, "veneno acotado a 0");
+const poisonHistBefore = run("state.history.length");
+run("addPoison(2, -1);");
+assertEq(run("state.history.length"), poisonHistBefore, "un cambio nulo no ensucia el historial");
+run("addPoison(2, 4); undo();");
+assertEq(run("state.players[1].poison"), 0, "undo revierte el veneno");
+run("setPoisonMode(false);");
+assertEq(run("state.poisonMode"), false, "modo veneno desactivado");
+run("setPoisonMode(true);");
+
+console.log("== eliminado ==");
+assertEq(run("isEliminated({ currentLife: 0, poison: 0 }, false)"), true, "0 vidas -> eliminado");
+assertEq(run("isEliminated({ currentLife: 10, poison: 10 }, true)"), true, "10 venenos -> eliminado");
+assertEq(run("isEliminated({ currentLife: 10, poison: 10 }, false)"), false, "10 venenos sin modo -> no eliminado");
+assertEq(run("isEliminated({ currentLife: 10, poison: 9 }, true)"), false, "9 venenos -> no eliminado");
+run("resetGame();");
+assertEq(run("state.players[0].poison"), 0, "reset limpia el veneno");
+
+console.log("== día y noche ==");
+assertEq(run("state.dayNightEnabled"), false, "desactivado por defecto");
+assertEq(run("state.isNight"), true, "por defecto es noche");
+run("setDayNightMode(true);");
+assertEq(run("state.dayNightEnabled"), true, "modo día/noche activado");
+assertEq(run("state.isNight"), true, "sigue en noche al activar");
+assertEq(run("state.initialLife"), 40, "activar día/noche no toca las vidas");
+run("toggleDayNight();");
+assertEq(run("state.isNight"), false, "toggle pasa a día");
+run("toggleDayNight();");
+assertEq(run("state.isNight"), true, "toggle vuelve a noche");
+run("setDayNightMode(false); toggleDayNight();");
+assertEq(run("state.isNight"), true, "toggle ignorado con el modo desactivado");
+run("setDayNightMode(true);");
+
 console.log("== serializacion modo comandante ==");
-run("addCommanderDamage(2, 1, 7);");
+run("addCommanderDamage(2, 1, 7); addPoison(3, 6);");
 assert(
   deepEqual(JSON.parse(run("JSON.stringify(deserialize(serialize(state)))")), JSON.parse(run("serialize(state)"))),
   "roundtrip con cmdDamage identico"
 );
 assertEq(run("JSON.parse(serialize(state)).commanderMode"), true, "commanderMode serializado");
+assertEq(run("JSON.parse(serialize(state)).poisonMode"), true, "poisonMode serializado");
+assertEq(run("JSON.parse(serialize(state)).dayNightEnabled"), true, "dayNightEnabled serializado");
+assertEq(run("JSON.parse(serialize(state)).players[2].poison"), 6, "veneno serializado");
 run("state = deserialize(serialize(state));");
 assertEq(run("maxCommanderDamage(state.players[1])"), 7, "daño sobrevive al roundtrip");
+assertEq(run("state.players[2].poison"), 6, "veneno sobrevive al roundtrip");
+assertEq(run("state.dayNightEnabled"), true, "día/noche activo sobrevive al roundtrip");
+assertEq(run("state.isNight"), true, "isNight sobrevive al roundtrip");
 
 console.log("== partida antigua (sin modo comandante) ==");
 const legacyJson = JSON.stringify({
@@ -181,6 +230,10 @@ const legacyJson = JSON.stringify({
 const legacyState = run(`deserialize(${JSON.stringify(legacyJson)})`);
 assertEq(legacyState.commanderMode, false, "JSON antiguo -> commanderMode false");
 assertEq(JSON.stringify(legacyState.players[0].cmdDamage), "{}", "JSON antiguo -> cmdDamage vacio");
+assertEq(legacyState.poisonMode, false, "JSON antiguo -> poisonMode false");
+assertEq(legacyState.players[0].poison, 0, "JSON antiguo -> poison 0");
+assertEq(legacyState.dayNightEnabled, false, "JSON antiguo -> dayNightEnabled false");
+assertEq(legacyState.isNight, true, "JSON antiguo -> isNight true");
 
 console.log("== layout rotations ==");
 function refRotation(rowIdx, colIdx, totalRows, totalCols, n) {
