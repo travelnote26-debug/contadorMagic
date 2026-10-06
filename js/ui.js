@@ -10,7 +10,6 @@ const boardEl = document.getElementById("board");
 const settingsSheet = document.getElementById("settings-sheet");
 const settingsRune = document.getElementById("settings-rune");
 const dialogBackdrop = document.getElementById("dialog-backdrop");
-const dayNightBtn = document.getElementById("daynight-btn");
 
 let sections = [];
 let lastKey = "";
@@ -65,6 +64,29 @@ class PlayerSection {
         </div>
         <div class="elim-badge" hidden>&#x2620; Fuera</div>
         <div class="team-badge" hidden></div>
+        <div class="daynight-pill" hidden>
+          <svg class="dn-icon dn-moon" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="18" cy="18" r="16" fill="#EDE3C8" stroke="#D4AF37" stroke-width="1.5"/>
+            <circle cx="12.5" cy="13" r="3.6" fill="#D5C79E"/>
+            <circle cx="23" cy="23.5" r="4.6" fill="#D5C79E"/>
+            <circle cx="24.5" cy="11.5" r="2.4" fill="#D5C79E"/>
+            <circle cx="12" cy="24.5" r="2.2" fill="#D5C79E"/>
+          </svg>
+          <svg class="dn-icon dn-sun" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" hidden>
+            <g stroke="#F0D060" stroke-width="3" stroke-linecap="round">
+              <line x1="30.5" y1="18" x2="33.5" y2="18"/>
+              <line x1="26.8" y1="26.8" x2="29" y2="29"/>
+              <line x1="18" y1="30.5" x2="18" y2="33.5"/>
+              <line x1="9.2" y1="26.8" x2="7" y2="29"/>
+              <line x1="5.5" y1="18" x2="2.5" y2="18"/>
+              <line x1="9.2" y1="9.2" x2="7" y2="7"/>
+              <line x1="18" y1="5.5" x2="18" y2="2.5"/>
+              <line x1="26.8" y1="9.2" x2="29" y2="7"/>
+            </g>
+            <circle cx="18" cy="18" r="10" fill="#F0D060" stroke="#D4AF37" stroke-width="1.5"/>
+            <circle cx="18" cy="18" r="6" fill="none" stroke="#E8B84B" stroke-width="1.2"/>
+          </svg>
+        </div>
       </div>
       <div class="color-overlay" hidden>
         <div class="color-circle" style="transform:rotate(${this.rotation}deg)">${this.buildColorCircle()}</div>
@@ -98,6 +120,9 @@ class PlayerSection {
     this.cmdRows = root.querySelector(".cmd-rows");
     this.cmdTitle = root.querySelector(".cmd-title");
     this.elimBadge = root.querySelector(".elim-badge");
+    this.dayNightEl = root.querySelector(".daynight-pill");
+    this.dnMoon = this.dayNightEl.querySelector(".dn-moon");
+    this.dnSun = this.dayNightEl.querySelector(".dn-sun");
     this.panelMode = null;
 
     root.querySelector(".minus").addEventListener("click", () => this.onLife(-1));
@@ -106,6 +131,10 @@ class PlayerSection {
     this.bindLongPress();
     this.setupColorOverlay();
     this.setupPanels();
+    this.dayNightEl.addEventListener("click", () => {
+      toggleDayNight();
+      if (navigator.vibrate) navigator.vibrate(10);
+    });
   }
 
   onLife(delta) {
@@ -149,6 +178,14 @@ class PlayerSection {
       this.poisonVal.textContent = poison + "/10";
       this.poisonPill.classList.toggle("over", poison >= 10);
     }
+    const showDayNight = !!state.dayNightEnabled;
+    this.dayNightEl.hidden = !showDayNight;
+    if (showDayNight) {
+      const isNight = state.isNight !== false;
+      this.dnMoon.hidden = !isNight;
+      this.dnSun.hidden = isNight;
+    }
+
     if (!this.cmdOverlay.hidden) {
       if ((this.panelMode === "cmd" && !showCmd) || (this.panelMode === "poison" && !showPoison)) {
         this.togglePanel(false);
@@ -499,12 +536,6 @@ function syncSettingsUI() {
   dayNightSwitch.classList.toggle("on", !!state.dayNightEnabled);
   dayNightSwitch.setAttribute("aria-checked", String(!!state.dayNightEnabled));
 
-  dayNightBtn.hidden = !state.dayNightEnabled;
-  const isNight = state.isNight !== false;
-  dayNightBtn.querySelector(".dn-moon").hidden = !isNight;
-  dayNightBtn.querySelector(".dn-sun").hidden = isNight;
-  dayNightBtn.classList.toggle("is-night", isNight);
-
   document.querySelectorAll(".preset-btn").forEach((b) => {
     b.classList.toggle("on", Number(b.dataset.life) === state.initialLife);
   });
@@ -566,11 +597,6 @@ function wireSettings() {
 
   document.getElementById("daynight-switch").addEventListener("click", () => {
     setDayNightMode(!state.dayNightEnabled);
-  });
-
-  dayNightBtn.addEventListener("click", () => {
-    if (navigator.vibrate) navigator.vibrate(10);
-    toggleDayNight();
   });
 }
 
