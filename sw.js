@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "contadormagic-v1";
+const CACHE = "contadormagic-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -36,18 +36,20 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  const refresh = fetch(e.request)
+    .then((res) => {
+      if (res.ok && e.request.url.startsWith(self.location.origin)) {
+        const clone = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(e.request, clone));
+      }
+      return res;
+    })
+    .catch(() => null);
+  if (e.waitUntil) e.waitUntil(refresh);
   e.respondWith(
     caches.match(e.request).then((cached) => {
       if (cached) return cached;
-      return fetch(e.request)
-        .then((res) => {
-          if (res.ok && e.request.url.startsWith(self.location.origin)) {
-            const clone = res.clone();
-            caches.open(CACHE).then((cache) => cache.put(e.request, clone));
-          }
-          return res;
-        })
-        .catch(() => caches.match("./index.html"));
+      return refresh.then((res) => res || caches.match("./index.html"));
     })
   );
 });
