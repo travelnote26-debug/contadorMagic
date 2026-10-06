@@ -55,17 +55,17 @@ class PlayerSection {
           <button class="life-btn plus" aria-label="Sumar vida">+</button>
         </div>
         <div class="mana-picker">${manaSymbolSVG(this.player.color, { size: 30 })}</div>
-        <div class="pills-top">
-          <div class="cmd-pill" hidden>
-            <span class="pill-icon">&#x2694;</span><span class="cmd-val">0/21</span>
-          </div>
-          <div class="poison-pill" hidden>
-            <span class="pill-icon">&#x2622;</span><span class="poison-val">0/10</span>
-          </div>
-        </div>
-        <div class="elim-badge" hidden>&#x2620; Fuera</div>
         <div class="team-badge" hidden></div>
       </div>
+      <div class="pills-top" data-rot="${this.rotation}" style="--rot:${this.rotation}deg">
+        <div class="cmd-pill" hidden>
+          <span class="pill-icon">&#x2694;</span><span class="cmd-val">0/21</span>
+        </div>
+        <div class="poison-pill" hidden>
+          <span class="pill-icon">&#x2622;</span><span class="poison-val">0/10</span>
+        </div>
+      </div>
+      <div class="elim-badge" data-rot="${this.rotation}" style="--rot:${this.rotation}deg" hidden>&#x2620; Fuera</div>
       <div class="color-overlay" hidden>
         <div class="color-circle" style="transform:rotate(${this.rotation}deg)">${this.buildColorCircle()}</div>
       </div>

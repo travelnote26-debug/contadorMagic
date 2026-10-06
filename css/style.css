@@ -347,7 +347,6 @@ body {
 .cmd-pill,
 .poison-pill {
   position: absolute;
-  top: 11px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -363,16 +362,59 @@ body {
   white-space: nowrap;
   cursor: pointer;
   pointer-events: auto;
+  transform: rotate(var(--rot, 0deg));
 }
 
 .cmd-pill {
-  left: 11px;
+  transform-origin: 0 0;
 }
 
 .poison-pill {
-  right: 11px;
+  transform-origin: 100% 0;
   border-color: #558B2F;
   color: #9CCC65;
+}
+
+/* esquina superior izquierda del jugador */
+.pills-top[data-rot="0"] .cmd-pill {
+  top: 11px;
+  left: 11px;
+}
+
+.pills-top[data-rot="90"] .cmd-pill {
+  top: 11px;
+  left: calc(100% - 11px);
+}
+
+.pills-top[data-rot="-90"] .cmd-pill {
+  top: calc(100% - 11px);
+  left: 11px;
+}
+
+.pills-top[data-rot="180"] .cmd-pill {
+  top: calc(100% - 11px);
+  left: calc(100% - 11px);
+}
+
+/* esquina superior derecha del jugador */
+.pills-top[data-rot="0"] .poison-pill {
+  top: 11px;
+  right: 11px;
+}
+
+.pills-top[data-rot="90"] .poison-pill {
+  top: calc(100% - 11px);
+  right: 11px;
+}
+
+.pills-top[data-rot="-90"] .poison-pill {
+  top: 11px;
+  right: calc(100% - 11px);
+}
+
+.pills-top[data-rot="180"] .poison-pill {
+  top: calc(100% - 11px);
+  right: calc(100% - 11px);
 }
 
 .pill-icon {
@@ -500,8 +542,6 @@ body {
 
 .elim-badge {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
   z-index: 3;
   padding: 4px 8px;
   border-radius: 12px;
@@ -513,6 +553,29 @@ body {
   font-size: 11px;
   letter-spacing: 1px;
   pointer-events: none;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: 100% 100%;
+}
+
+/* esquina inferior derecha del jugador */
+.elim-badge[data-rot="0"] {
+  right: 11px;
+  bottom: 11px;
+}
+
+.elim-badge[data-rot="90"] {
+  right: calc(100% - 11px);
+  bottom: 11px;
+}
+
+.elim-badge[data-rot="-90"] {
+  right: 11px;
+  bottom: calc(100% - 11px);
+}
+
+.elim-badge[data-rot="180"] {
+  right: calc(100% - 11px);
+  bottom: calc(100% - 11px);
 }
 
 .elim-badge[hidden] {
