@@ -336,6 +336,169 @@ body {
   display: none;
 }
 
+/* ---------- Commander damage / elimination ---------- */
+.cmd-pill {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--gold-dark);
+  color: var(--gold);
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.cmd-pill[hidden] {
+  display: none;
+}
+
+.cmd-pill.over {
+  color: #FF6B6B;
+  border-color: #B23A3A;
+  animation: cmdPulse 1s ease-in-out infinite;
+}
+
+@keyframes cmdPulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.cmd-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.cmd-overlay[hidden] {
+  display: none;
+}
+
+.cmd-card {
+  width: calc(100% - 20px);
+  max-width: 240px;
+  background: var(--dark-surface);
+  border: 1px solid var(--gold-dark);
+  border-radius: 12px;
+  padding: 10px 12px 12px;
+  color: var(--parchment);
+}
+
+.cmd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cmd-title {
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+
+.cmd-close {
+  background: none;
+  border: none;
+  color: var(--parchment-dark);
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.cmd-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.cmd-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--medieval);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd-num {
+  min-width: 22px;
+  text-align: center;
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.cmd-num.over {
+  color: #FF6B6B;
+}
+
+.cmd-step {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(139, 105, 20, 0.15);
+  border: 1px solid rgba(139, 105, 20, 0.5);
+  color: var(--gold);
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cmd-step:active {
+  opacity: 0.75;
+}
+
+.elim-badge {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 3;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(90, 15, 15, 0.92);
+  border: 1px solid #C0392B;
+  color: #FFD9D9;
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 11px;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+.elim-badge[hidden] {
+  display: none;
+}
+
+.player-section.eliminated .card-frame,
+.player-section.eliminated .frame-gradient {
+  filter: saturate(0.35) brightness(0.8);
+}
+
 /* ---------- Settings rune ---------- */
 #settings-rune {
   position: fixed;
@@ -509,6 +672,44 @@ body {
 
 .num-btn:active {
   opacity: 0.8;
+}
+
+.preset-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.preset-btn {
+  flex: 1;
+  padding: 8px 0;
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 15px;
+  letter-spacing: 1px;
+  background: rgba(139, 105, 20, 0.12);
+  border: 1px solid rgba(139, 105, 20, 0.5);
+  border-radius: 4px;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.preset-btn.on {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink-dark);
+}
+
+.preset-btn:active {
+  opacity: 0.8;
+}
+
+.setting-hint {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--parchment-dark);
+  opacity: 0.85;
+  margin-top: 8px;
 }
 
 .teams-row {

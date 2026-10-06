@@ -22,6 +22,7 @@ function createInitialState() {
     playerCount: 4,
     teamsEnabled: false,
     teamCount: 2,
+    commanderMode: false,
     history: [],
     startingPlayerId: null
   };
@@ -33,7 +34,8 @@ function createPlayers(playerCount, initialLife) {
     name: "Jugador " + (i + 1),
     currentLife: initialLife,
     color: MagicColors[i % MagicColors.length].key,
-    team: null
+    team: null,
+    cmdDamage: {}
   }));
 }
 
@@ -106,6 +108,40 @@ function resetGame() {
   notify();
 }
 
+function setCommanderMode(on) {
+  if (on === !!state.commanderMode) return;
+  state = { ...state, commanderMode: !!on };
+  if (on) {
+    state.initialLife = 40;
+    resetGame();
+    return;
+  }
+  persist();
+  notify();
+}
+
+function applyLifePreset(value) {
+  state = { ...state, initialLife: value };
+  resetGame();
+}
+
+function addCommanderDamage(playerId, attackerId, delta) {
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) return;
+  const current = (player.cmdDamage || {})[attackerId] || 0;
+  const next = Math.max(0, Math.min(21, current + delta));
+  if (next === current) return;
+  modifyPlayer(playerId, (p) => {
+    const cmdDamage = p.cmdDamage || {};
+    return { ...p, cmdDamage: { ...cmdDamage, [attackerId]: next } };
+  });
+}
+
+function maxCommanderDamage(p) {
+  const values = Object.values(p.cmdDamage || {});
+  return values.length ? Math.max(...values) : 0;
+}
+
 function setStartingPlayer(playerId) {
   state = { ...state, startingPlayerId: playerId };
   persist();
@@ -115,6 +151,7 @@ function setStartingPlayer(playerId) {
 function playerToJson(p) {
   const obj = { id: p.id, name: p.name, currentLife: p.currentLife, color: p.color };
   if (p.team != null) obj.team = p.team;
+  obj.cmdDamage = { ...(p.cmdDamage || {}) };
   return obj;
 }
 
@@ -124,6 +161,7 @@ function serialize(st) {
     playerCount: st.playerCount,
     teamsEnabled: st.teamsEnabled,
     teamCount: st.teamCount,
+    commanderMode: !!st.commanderMode,
     startingPlayerId: st.startingPlayerId != null ? st.startingPlayerId : null,
     players: st.players.map(playerToJson),
     history: st.history.slice(-MAX_HISTORY).map((list) => list.map(playerToJson))
@@ -135,12 +173,15 @@ function deserialize(json) {
     const r = JSON.parse(json);
     if (!r || !Array.isArray(r.players)) return null;
     return {
-      players: r.players,
+      players: r.players.map((p) => ({ cmdDamage: {}, ...p })),
       initialLife: r.initialLife,
       playerCount: r.playerCount,
       teamsEnabled: r.teamsEnabled,
       teamCount: r.teamCount,
-      history: Array.isArray(r.history) ? r.history : [],
+      commanderMode: !!r.commanderMode,
+      history: (Array.isArray(r.history) ? r.history : []).map((list) =>
+        list.map((p) => ({ cmdDamage: {}, ...p }))
+      ),
       startingPlayerId: r.startingPlayerId != null ? r.startingPlayerId : null
     };
   } catch (e) {

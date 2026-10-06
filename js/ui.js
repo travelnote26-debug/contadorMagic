@@ -58,6 +58,19 @@ class PlayerSection {
       <div class="color-overlay" hidden>
         <div class="color-circle" style="transform:rotate(${this.rotation}deg)">${this.buildColorCircle()}</div>
       </div>
+      <div class="cmd-pill" hidden>
+        <span class="cmd-icon">&#x2694;</span><span class="cmd-val">0/21</span>
+      </div>
+      <div class="cmd-overlay" hidden>
+        <div class="cmd-card">
+          <div class="cmd-head">
+            <span class="cmd-title">Daño de comandante</span>
+            <button class="cmd-close" aria-label="Cerrar">&#x2715;</button>
+          </div>
+          <div class="cmd-rows"></div>
+        </div>
+      </div>
+      <div class="elim-badge" hidden>&#x2620; Fuera</div>
       <div class="highlight"></div>
       <div class="team-badge" hidden></div>
     `;
@@ -71,12 +84,18 @@ class PlayerSection {
     this.colorOverlay = root.querySelector(".color-overlay");
     this.teamBadgeEl = root.querySelector(".team-badge");
     this.highlightEl = root.querySelector(".highlight");
+    this.cmdPill = root.querySelector(".cmd-pill");
+    this.cmdVal = root.querySelector(".cmd-val");
+    this.cmdOverlay = root.querySelector(".cmd-overlay");
+    this.cmdRows = root.querySelector(".cmd-rows");
+    this.elimBadge = root.querySelector(".elim-badge");
 
     root.querySelector(".minus").addEventListener("click", () => this.onLife(-1));
     root.querySelector(".plus").addEventListener("click", () => this.onLife(1));
     this.manaPickerEl.addEventListener("click", () => this.toggleColorPicker(true));
     this.bindLongPress();
     this.setupColorOverlay();
+    this.setupCmdPanel();
   }
 
   onLife(delta) {
@@ -105,6 +124,21 @@ class PlayerSection {
     } else {
       this.teamBadgeEl.hidden = true;
     }
+
+    const showCmd = !!state.commanderMode;
+    this.cmdPill.hidden = !showCmd;
+    if (showCmd) {
+      const dmg = maxCommanderDamage(player);
+      this.cmdVal.textContent = dmg + "/21";
+      this.cmdPill.classList.toggle("over", dmg >= 21);
+      if (!this.cmdOverlay.hidden) this.renderCmdRows();
+    } else if (!this.cmdOverlay.hidden) {
+      this.toggleCmdPanel(false);
+    }
+
+    const eliminated = player.currentLife <= 0;
+    this.root.classList.toggle("eliminated", eliminated);
+    this.elimBadge.hidden = !eliminated;
 
     const newLife = player.currentLife;
     if (newLife !== this.prevLife) {
@@ -217,6 +251,43 @@ class PlayerSection {
   toggleColorPicker(open) {
     this.colorOverlay.hidden = !open;
     this.root.querySelectorAll(".life-btn").forEach((b) => b.classList.toggle("disabled", open));
+  }
+
+  setupCmdPanel() {
+    this.cmdPill.addEventListener("click", () => this.toggleCmdPanel(true));
+    this.cmdOverlay.addEventListener("click", (e) => {
+      const step = e.target.closest(".cmd-step");
+      if (step) {
+        if (navigator.vibrate) navigator.vibrate(10);
+        addCommanderDamage(this.player.id, Number(step.dataset.attacker), Number(step.dataset.delta));
+        return;
+      }
+      if (e.target.closest(".cmd-close") || e.target === this.cmdOverlay) this.toggleCmdPanel(false);
+    });
+  }
+
+  toggleCmdPanel(open) {
+    if (open) this.renderCmdRows();
+    this.cmdOverlay.hidden = !open;
+    this.root.querySelectorAll(".life-btn").forEach((b) => b.classList.toggle("disabled", open));
+  }
+
+  renderCmdRows() {
+    const me = this.player;
+    this.cmdRows.innerHTML = state.players
+      .filter((p) => p.id !== me.id)
+      .map((p) => {
+        const dmg = (me.cmdDamage && me.cmdDamage[p.id]) || 0;
+        return (
+          `<div class="cmd-line">` +
+          `<span class="cmd-name">${p.name}</span>` +
+          `<button class="cmd-step" data-attacker="${p.id}" data-delta="-1" aria-label="Restar daño">&#x2212;</button>` +
+          `<span class="cmd-num${dmg >= 21 ? " over" : ""}">${dmg}</span>` +
+          `<button class="cmd-step" data-attacker="${p.id}" data-delta="1" aria-label="Sumar daño">+</button>` +
+          `</div>`
+        );
+      })
+      .join("");
   }
 }
 
@@ -375,6 +446,14 @@ function syncSettingsUI() {
   teamsMinus.disabled = state.teamCount <= 2;
   teamsPlus.disabled = state.teamCount >= 6;
   teamsLabel.textContent = state.teamCount + " equipos";
+
+  const commanderSwitch = document.getElementById("commander-switch");
+  commanderSwitch.classList.toggle("on", !!state.commanderMode);
+  commanderSwitch.setAttribute("aria-checked", String(!!state.commanderMode));
+
+  document.querySelectorAll(".preset-btn").forEach((b) => {
+    b.classList.toggle("on", Number(b.dataset.life) === state.initialLife);
+  });
 }
 
 function wireSettings() {
@@ -402,10 +481,13 @@ function wireSettings() {
   });
 
   document.getElementById("life-minus").addEventListener("click", () => {
-    updateConfig({ initialLife: Math.max(1, state.initialLife - 1) });
+    applyLifePreset(Math.max(1, state.initialLife - 1));
   });
   document.getElementById("life-plus").addEventListener("click", () => {
-    updateConfig({ initialLife: Math.min(99, state.initialLife + 1) });
+    applyLifePreset(Math.min(99, state.initialLife + 1));
+  });
+  document.querySelectorAll(".preset-btn").forEach((b) => {
+    b.addEventListener("click", () => applyLifePreset(Number(b.dataset.life)));
   });
 
   document.getElementById("roulette-btn").addEventListener("click", startRoulette);
@@ -418,6 +500,10 @@ function wireSettings() {
   });
   document.getElementById("teams-plus").addEventListener("click", () => {
     updateConfig({ teamCount: Math.min(6, state.teamCount + 1) });
+  });
+
+  document.getElementById("commander-switch").addEventListener("click", () => {
+    setCommanderMode(!state.commanderMode);
   });
 }
 

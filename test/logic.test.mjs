@@ -125,6 +125,63 @@ assertEq(run("state.players.length"), 3, "load() restaura partida guardada");
 assertEq(run("state.players[1].currentLife"), 16, "load() restaura vidas");
 assertEq(run("state.startingPlayerId"), 2, "load() restaura jugador inicial");
 
+console.log("== presets de vida ==");
+run("state = createInitialState(); state = distributeTeams({ ...state, players: createPlayers(4, 21) });");
+run("applyLifePreset(30);");
+assertEq(run("state.initialLife"), 30, "preset 30 actualiza config");
+assertEq(run("state.players.every(p => p.currentLife === 30)"), true, "preset 30 aplica ya las vidas");
+assertEq(run("state.history.length"), 0, "preset limpia historial");
+run("applyLifePreset(40);");
+assertEq(run("state.players[0].currentLife"), 40, "preset 40 aplica ya las vidas");
+
+console.log("== modo comandante ==");
+run("setCommanderMode(true);");
+assertEq(run("state.commanderMode"), true, "modo comandante activado");
+assertEq(run("state.initialLife"), 40, "activar modo pone vidas a 40");
+assertEq(run("state.players.every(p => p.currentLife === 40)"), true, "activar modo reinicia la partida");
+run("setCommanderMode(false);");
+assertEq(run("state.commanderMode"), false, "modo comandante desactivado");
+assertEq(run("state.initialLife"), 40, "desactivar no toca las vidas");
+run("setCommanderMode(true);");
+
+console.log("== daño de comandante ==");
+run("addCommanderDamage(1, 2, 5); addCommanderDamage(1, 3, 4);");
+assertEq(run("state.players[0].cmdDamage[2]"), 5, "daño del rival 2");
+assertEq(run("state.players[0].cmdDamage[3]"), 4, "daño del rival 3");
+assertEq(run("maxCommanderDamage(state.players[0])"), 5, "peor daño de un solo rival");
+run("addCommanderDamage(1, 2, 30);");
+assertEq(run("state.players[0].cmdDamage[2]"), 21, "daño acotado a 21");
+run("addCommanderDamage(1, 2, -100);");
+assertEq(run("state.players[0].cmdDamage[2]"), 0, "daño acotado a 0");
+run("addCommanderDamage(1, 3, 10); undo();");
+assertEq(run("state.players[0].cmdDamage[3]"), 4, "undo revierte el ultimo daño");
+run("resetGame();");
+assertEq(run("Object.keys(state.players[0].cmdDamage).length"), 0, "reset limpia el daño");
+
+console.log("== serializacion modo comandante ==");
+run("addCommanderDamage(2, 1, 7);");
+assert(
+  deepEqual(JSON.parse(run("JSON.stringify(deserialize(serialize(state)))")), JSON.parse(run("serialize(state)"))),
+  "roundtrip con cmdDamage identico"
+);
+assertEq(run("JSON.parse(serialize(state)).commanderMode"), true, "commanderMode serializado");
+run("state = deserialize(serialize(state));");
+assertEq(run("maxCommanderDamage(state.players[1])"), 7, "daño sobrevive al roundtrip");
+
+console.log("== partida antigua (sin modo comandante) ==");
+const legacyJson = JSON.stringify({
+  initialLife: 21,
+  playerCount: 2,
+  teamsEnabled: false,
+  teamCount: 2,
+  players: [{ id: 1, name: "Jugador 1", currentLife: 21, color: "WHITE" }],
+  history: [],
+  startingPlayerId: null
+});
+const legacyState = run(`deserialize(${JSON.stringify(legacyJson)})`);
+assertEq(legacyState.commanderMode, false, "JSON antiguo -> commanderMode false");
+assertEq(JSON.stringify(legacyState.players[0].cmdDamage), "{}", "JSON antiguo -> cmdDamage vacio");
+
 console.log("== layout rotations ==");
 function refRotation(rowIdx, colIdx, totalRows, totalCols, n) {
   if (totalRows <= 1) return 0;
