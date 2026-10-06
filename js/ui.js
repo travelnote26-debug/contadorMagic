@@ -391,6 +391,7 @@ function wireSettings() {
   document.getElementById("dialog-confirm").addEventListener("click", () => {
     dialogBackdrop.hidden = true;
     resetGame();
+    closeSettings();
   });
 
   document.getElementById("players-minus").addEventListener("click", () => {
