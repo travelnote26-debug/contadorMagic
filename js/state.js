@@ -1,11 +1,11 @@
 "use strict";
 
 const MagicColors = [
-  { key: "WHITE", displayName: "Blanco", composeColor: "#FFFFFFEA", cardBgColor: "#E8E4D7" },
-  { key: "BLUE", displayName: "Azul", composeColor: "#0E68AB", cardBgColor: "#C1D8E9" },
-  { key: "BLACK", displayName: "Negro", composeColor: "#150B00", cardBgColor: "#333333" },
-  { key: "RED", displayName: "Rojo", composeColor: "#D3202A", cardBgColor: "#D46A6A" },
-  { key: "GREEN", displayName: "Verde", composeColor: "#00733E", cardBgColor: "#7CB88C" }
+  { key: "WHITE", displayName: "Blanco", composeColor: "#FFFFFFEA", cardBgColor: "#F0EAD6" },
+  { key: "BLUE", displayName: "Azul", composeColor: "#0E68AB", cardBgColor: "#6FA3CE" },
+  { key: "BLACK", displayName: "Negro", composeColor: "#150B00", cardBgColor: "#37302A" },
+  { key: "RED", displayName: "Rojo", composeColor: "#D3202A", cardBgColor: "#D4604B" },
+  { key: "GREEN", displayName: "Verde", composeColor: "#00733E", cardBgColor: "#5C9E63" }
 ];
 
 const MagicColorByKey = Object.fromEntries(MagicColors.map((c) => [c.key, c]));

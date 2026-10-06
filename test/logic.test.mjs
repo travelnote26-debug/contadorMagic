@@ -170,6 +170,19 @@ assert(run("manaSymbolSVG('GREEN').includes('stroke-opacity=\"0.5\"')"), "GREEN 
 assertEq(run("isLight('#E8E4D7')"), true, "fondo blanco es claro");
 assertEq(run("isLight('#0E68AB')"), false, "azul es oscuro");
 
+console.log("== card bg colors ==");
+assertEq(
+  run("MagicColors.map(c => c.cardBgColor)"),
+  ["#F0EAD6", "#6FA3CE", "#37302A", "#D4604B", "#5C9E63"],
+  "tonos de marco MTG"
+);
+const textFor = (key) => run(`isLight(MagicColorByKey['${key}'].cardBgColor) ? "#000000" : "#FFFFFF"`);
+assertEq(textFor("WHITE"), "#000000", "fondo blanco -> texto negro");
+assertEq(textFor("BLUE"), "#000000", "fondo azul -> texto negro");
+assertEq(textFor("BLACK"), "#FFFFFF", "fondo negro -> texto blanco");
+assertEq(textFor("RED"), "#000000", "fondo rojo -> texto negro");
+assertEq(textFor("GREEN"), "#000000", "fondo verde -> texto negro");
+
 console.log("== effects ==");
 assertEq(run("effectAlpha(0)"), 0, "alpha inicial 0");
 assertEq(run("effectAlpha(0.3)"), 1, "alpha medio 1");
