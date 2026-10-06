@@ -22,6 +22,30 @@
 
   <div id="board"></div>
 
+  <button id="daynight-btn" hidden aria-label="Cambiar entre día y noche" title="Día / Noche">
+    <svg class="dn-icon dn-moon" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="18" cy="18" r="16" fill="#EDE3C8" stroke="#D4AF37" stroke-width="1.5"/>
+      <circle cx="12.5" cy="13" r="3.6" fill="#D5C79E"/>
+      <circle cx="23" cy="23.5" r="4.6" fill="#D5C79E"/>
+      <circle cx="24.5" cy="11.5" r="2.4" fill="#D5C79E"/>
+      <circle cx="12" cy="24.5" r="2.2" fill="#D5C79E"/>
+    </svg>
+    <svg class="dn-icon dn-sun" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" hidden>
+      <g stroke="#F0D060" stroke-width="3" stroke-linecap="round">
+        <line x1="30.5" y1="18" x2="33.5" y2="18"/>
+        <line x1="26.8" y1="26.8" x2="29" y2="29"/>
+        <line x1="18" y1="30.5" x2="18" y2="33.5"/>
+        <line x1="9.2" y1="26.8" x2="7" y2="29"/>
+        <line x1="5.5" y1="18" x2="2.5" y2="18"/>
+        <line x1="9.2" y1="9.2" x2="7" y2="7"/>
+        <line x1="18" y1="5.5" x2="18" y2="2.5"/>
+        <line x1="26.8" y1="9.2" x2="29" y2="7"/>
+      </g>
+      <circle cx="18" cy="18" r="10" fill="#F0D060" stroke="#D4AF37" stroke-width="1.5"/>
+      <circle cx="18" cy="18" r="6" fill="none" stroke="#E8B84B" stroke-width="1.2"/>
+    </svg>
+  </button>
+
   <button id="settings-rune" aria-label="Opciones" title="Opciones">
     <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path d="M10 12 H26 M10 18 H26 M10 24 H26"
