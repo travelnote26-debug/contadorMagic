@@ -31,18 +31,8 @@
       <circle cx="12" cy="24.5" r="2.2" fill="#D5C79E"/>
     </svg>
     <svg class="dn-icon dn-sun" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" hidden>
-      <g stroke="#F0D060" stroke-width="3" stroke-linecap="round">
-        <line x1="30.5" y1="18" x2="33.5" y2="18"/>
-        <line x1="26.8" y1="26.8" x2="29" y2="29"/>
-        <line x1="18" y1="30.5" x2="18" y2="33.5"/>
-        <line x1="9.2" y1="26.8" x2="7" y2="29"/>
-        <line x1="5.5" y1="18" x2="2.5" y2="18"/>
-        <line x1="9.2" y1="9.2" x2="7" y2="7"/>
-        <line x1="18" y1="5.5" x2="18" y2="2.5"/>
-        <line x1="26.8" y1="9.2" x2="29" y2="7"/>
-      </g>
-      <circle cx="18" cy="18" r="10" fill="#F0D060" stroke="#D4AF37" stroke-width="1.5"/>
-      <circle cx="18" cy="18" r="6" fill="none" stroke="#E8B84B" stroke-width="1.2"/>
+      <circle cx="18" cy="18" r="16" fill="#F0D060" stroke="#D4AF37" stroke-width="1.5"/>
+      <circle cx="18" cy="18" r="10" fill="none" stroke="#E8B84B" stroke-width="1.5"/>
     </svg>
   </button>
 
@@ -75,6 +65,7 @@
         <span class="num-label" id="players-label">4 jugadores</span>
         <button class="num-btn" id="players-plus" aria-label="Mas jugadores">+</button>
       </div>
+      <button class="parchment-btn" id="roulette-btn" style="margin-top:10px">Elegir jugador inicial</button>
     </div>
 
     <div class="setting-section">
@@ -88,28 +79,6 @@
         <button class="preset-btn" data-life="20">20</button>
         <button class="preset-btn" data-life="30">30</button>
         <button class="preset-btn" data-life="40">40</button>
-      </div>
-    </div>
-
-    <div class="setting-section">
-      <div class="section-title">Jugador Inicial</div>
-      <button class="parchment-btn" id="roulette-btn">Elegir jugador inicial</button>
-    </div>
-
-    <div class="setting-section">
-      <div class="section-title">Equipos</div>
-      <div class="teams-row">
-        <span class="teams-label">Modo equipos</span>
-        <button class="switch" id="teams-switch" role="switch" aria-checked="false">
-          <span class="knob"></span>
-        </button>
-      </div>
-      <div id="teams-count-wrap" hidden style="margin-top:8px">
-        <div class="num-row">
-          <button class="num-btn" id="teams-minus" aria-label="Menos equipos">&#x2212;</button>
-          <span class="num-label" id="teams-label">2 equipos</span>
-          <button class="num-btn" id="teams-plus" aria-label="Mas equipos">+</button>
-        </div>
       </div>
     </div>
 

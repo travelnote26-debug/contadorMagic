@@ -339,17 +339,15 @@ body {
 /* ---------- Commander damage / elimination ---------- */
 .pills-top {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  inset: 0;
   z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  pointer-events: none;
 }
 
 .cmd-pill,
 .poison-pill {
+  position: absolute;
+  top: 11px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -367,7 +365,12 @@ body {
   pointer-events: auto;
 }
 
+.cmd-pill {
+  left: 11px;
+}
+
 .poison-pill {
+  right: 11px;
   border-color: #558B2F;
   color: #9CCC65;
 }

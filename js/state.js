@@ -241,7 +241,7 @@ function load() {
     if (raw) {
       const restored = deserialize(raw);
       if (restored && restored.players.length > 0) {
-        state = restored;
+        state = { ...restored, teamsEnabled: false };
         return;
       }
     }

@@ -467,11 +467,6 @@ function syncSettingsUI() {
   const lifeMinus = document.getElementById("life-minus");
   const lifePlus = document.getElementById("life-plus");
   const lifeLabel = document.getElementById("life-label");
-  const teamsSwitch = document.getElementById("teams-switch");
-  const teamsWrap = document.getElementById("teams-count-wrap");
-  const teamsMinus = document.getElementById("teams-minus");
-  const teamsPlus = document.getElementById("teams-plus");
-  const teamsLabel = document.getElementById("teams-label");
 
   playersMinus.disabled = state.playerCount <= 2;
   playersPlus.disabled = state.playerCount >= 6;
@@ -480,12 +475,6 @@ function syncSettingsUI() {
   lifeMinus.disabled = state.initialLife <= 1;
   lifePlus.disabled = state.initialLife >= 99;
   lifeLabel.textContent = state.initialLife + " vidas";
-
-  teamsSwitch.classList.toggle("on", state.teamsEnabled);
-  teamsWrap.hidden = !state.teamsEnabled;
-  teamsMinus.disabled = state.teamCount <= 2;
-  teamsPlus.disabled = state.teamCount >= 6;
-  teamsLabel.textContent = state.teamCount + " equipos";
 
   const commanderSwitch = document.getElementById("commander-switch");
   commanderSwitch.classList.toggle("on", !!state.commanderMode);
@@ -544,16 +533,6 @@ function wireSettings() {
   });
 
   document.getElementById("roulette-btn").addEventListener("click", startRoulette);
-
-  document.getElementById("teams-switch").addEventListener("click", () => {
-    updateConfig({ teamsEnabled: !state.teamsEnabled });
-  });
-  document.getElementById("teams-minus").addEventListener("click", () => {
-    updateConfig({ teamCount: Math.max(2, state.teamCount - 1) });
-  });
-  document.getElementById("teams-plus").addEventListener("click", () => {
-    updateConfig({ teamCount: Math.min(6, state.teamCount + 1) });
-  });
 
   document.getElementById("commander-switch").addEventListener("click", () => {
     setCommanderMode(!state.commanderMode);
