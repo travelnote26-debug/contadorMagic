@@ -393,6 +393,8 @@ body {
 .cmd-card {
   width: calc(100% - 20px);
   max-width: 240px;
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
   background: var(--dark-surface);
   border: 1px solid var(--gold-dark);
   border-radius: 12px;

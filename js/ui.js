@@ -54,15 +54,17 @@ class PlayerSection {
           <button class="life-btn plus" aria-label="Sumar vida">+</button>
         </div>
         <div class="mana-picker">${manaSymbolSVG(this.player.color, { size: 30 })}</div>
+        <div class="cmd-pill" hidden>
+          <span class="cmd-icon">&#x2694;</span><span class="cmd-val">0/21</span>
+        </div>
+        <div class="elim-badge" hidden>&#x2620; Fuera</div>
+        <div class="team-badge" hidden></div>
       </div>
       <div class="color-overlay" hidden>
         <div class="color-circle" style="transform:rotate(${this.rotation}deg)">${this.buildColorCircle()}</div>
       </div>
-      <div class="cmd-pill" hidden>
-        <span class="cmd-icon">&#x2694;</span><span class="cmd-val">0/21</span>
-      </div>
       <div class="cmd-overlay" hidden>
-        <div class="cmd-card">
+        <div class="cmd-card" style="transform:rotate(${this.rotation}deg)">
           <div class="cmd-head">
             <span class="cmd-title">Daño de comandante</span>
             <button class="cmd-close" aria-label="Cerrar">&#x2715;</button>
@@ -70,9 +72,7 @@ class PlayerSection {
           <div class="cmd-rows"></div>
         </div>
       </div>
-      <div class="elim-badge" hidden>&#x2620; Fuera</div>
       <div class="highlight"></div>
-      <div class="team-badge" hidden></div>
     `;
     this.root = root;
     this.lifeNumberEl = root.querySelector(".life-number");
