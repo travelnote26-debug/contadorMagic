@@ -66,7 +66,24 @@ function drawClawEffect(ctx, w, h, progress) {
   ctx.restore();
 }
 
-function drawPotionEffect(ctx, w, h, progress) {
+const POTION_GREEN = {
+  glow: "#00CC66",
+  glowOuter: "#00FF88",
+  body: "#00AA55",
+  shine: "#33FF88",
+  particle: "#66FFAA"
+};
+
+const POTION_RED = {
+  glow: "#CC0000",
+  glowOuter: "#FF2222",
+  body: "#AA0000",
+  shine: "#FF3333",
+  particle: "#FF6666"
+};
+
+function drawPotionEffect(ctx, w, h, progress, palette) {
+  const c = palette || POTION_GREEN;
   const alpha = effectAlpha(progress);
   const cx = w / 2;
   const cy = h / 2;
@@ -76,13 +93,13 @@ function drawPotionEffect(ctx, w, h, progress) {
   ctx.save();
 
   ctx.globalAlpha = alpha * 0.14;
-  ctx.fillStyle = "#00CC66";
+  ctx.fillStyle = c.glow;
   ctx.beginPath();
   ctx.arc(cx, cy, Math.min(w, h) * 0.35, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.globalAlpha = alpha * 0.07;
-  ctx.fillStyle = "#00FF88";
+  ctx.fillStyle = c.glowOuter;
   ctx.beginPath();
   ctx.arc(cx, cy, Math.min(w, h) * 0.5, 0, Math.PI * 2);
   ctx.fill();
@@ -108,14 +125,14 @@ function drawPotionEffect(ctx, w, h, progress) {
   };
 
   ctx.globalAlpha = alpha * 0.7;
-  ctx.fillStyle = "#00AA55";
+  ctx.fillStyle = c.body;
   rrect(cx - fw / 2, bodyTop, fw, fh * 0.5, fw * 0.25);
   ctx.fill();
   rrect(cx - nw / 2, bodyTop - nh + 2 * dpx, nw, nh, nw * 0.15);
   ctx.fill();
 
   ctx.globalAlpha = alpha * 0.45;
-  ctx.fillStyle = "#33FF88";
+  ctx.fillStyle = c.shine;
   rrect(cx - fw * 0.32, bodyTop + fh * 0.15, fw * 0.64, fh * 0.25, fw * 0.18);
   ctx.fill();
 
@@ -140,7 +157,7 @@ function drawPotionEffect(ctx, w, h, progress) {
     const px = cx + Math.cos(ang) * dist * (0.5 + progress * 0.5);
     const py = cy + Math.sin(ang) * dist - rise * fh * 0.5 + yOff;
     ctx.globalAlpha = alpha * 0.55 * (1 - progress * 0.3);
-    ctx.fillStyle = "#66FFaa";
+    ctx.fillStyle = c.particle;
     ctx.beginPath();
     ctx.arc(px, py, 2.5 * dpx * (1 - progress * 0.5), 0, Math.PI * 2);
     ctx.fill();
