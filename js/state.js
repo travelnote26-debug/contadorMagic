@@ -222,6 +222,73 @@ function persist() {
   } catch (e) {}
 }
 
+const HISTORY_KEY = "contadormagic_history";
+const MAX_MATCHES = 20;
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function persistHistory(matches) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(matches));
+  } catch (e) {}
+}
+
+function currentMatch(now) {
+  const stamp = now != null ? now : Date.now();
+  return {
+    id: stamp,
+    savedAt: new Date(stamp).toISOString(),
+    playerCount: state.players.length,
+    initialLife: state.initialLife,
+    commanderMode: !!state.commanderMode,
+    poisonMode: !!state.poisonMode,
+    players: state.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      color: p.color,
+      currentLife: p.currentLife,
+      poison: p.poison || 0
+    }))
+  };
+}
+
+function matchInProgress() {
+  if (!Array.isArray(state.players) || state.players.length === 0) return false;
+  const fresh = createPlayers(state.playerCount, state.initialLife);
+  return state.players.some((p, i) => {
+    const base = fresh[i];
+    if (!base) return false;
+    if (p.currentLife !== base.currentLife) return true;
+    if ((p.poison || 0) !== 0) return true;
+    if (Object.keys(p.cmdDamage || {}).length > 0) return true;
+    if (p.name !== base.name) return true;
+    return false;
+  });
+}
+
+function recordCurrentMatch(now) {
+  if (!matchInProgress()) return false;
+  const matches = loadHistory();
+  matches.unshift(currentMatch(now));
+  persistHistory(matches.slice(0, MAX_MATCHES));
+  return true;
+}
+
+function clearHistory() {
+  try {
+    localStorage.removeItem(HISTORY_KEY);
+  } catch (e) {}
+}
+
 const listeners = new Set();
 function subscribe(fn) {
   listeners.add(fn);

@@ -920,6 +920,52 @@ body {
   margin-top: 8px;
 }
 
+.history-row {
+  background: rgba(139, 105, 20, 0.1);
+  border: 1px solid rgba(139, 105, 20, 0.35);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 8px;
+}
+
+.history-meta {
+  font-family: var(--medieval);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--gold-dark);
+  margin-bottom: 6px;
+}
+
+.history-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.history-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--medieval);
+  font-size: 13px;
+  color: var(--parchment);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+
+.history-chip i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.history-chip.out {
+  color: #FF6B6B;
+}
+
 .switch-row {
   display: flex;
   align-items: center;

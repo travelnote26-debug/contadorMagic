@@ -495,8 +495,53 @@ function startRoulette() {
   rouletteRaf = requestAnimationFrame(loop);
 }
 
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return map[c];
+  });
+}
+
+function historyRow(match) {
+  const d = new Date(match.savedAt);
+  const fecha = isNaN(d.getTime())
+    ? ""
+    : String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") +
+      " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  const modes = [];
+  if (match.commanderMode) modes.push("comandante");
+  if (match.poisonMode) modes.push("veneno");
+  const meta = [match.playerCount + " jug", match.initialLife + " vidas"].concat(modes).join(" · ");
+  const chips = (Array.isArray(match.players) ? match.players : [])
+    .map((p) => {
+      const out = isEliminated(p, match.poisonMode);
+      const color = MagicColorByKey[p.color] ? MagicColorByKey[p.color].cardBgColor : "#37302A";
+      return (
+        `<span class="history-chip${out ? " out" : ""}">` +
+        `<i style="background:${color}"></i>` +
+        `${escapeHtml(p.name)} ${p.currentLife}</span>`
+      );
+    })
+    .join("");
+  return `<div class="history-row"><div class="history-meta">${fecha} · ${meta}</div>` +
+    `<div class="history-chips">${chips}</div></div>`;
+}
+
+function renderHistory() {
+  const listEl = document.getElementById("history-list");
+  const emptyEl = document.getElementById("history-empty");
+  if (!listEl || !emptyEl) return;
+  const matches = loadHistory();
+  listEl.innerHTML = matches.map(historyRow).join("");
+  emptyEl.hidden = matches.length > 0;
+}
+
+let clearArmedAt = 0;
+let saveBtnTimer = null;
+
 function openSettings() {
   if (rouletteActive) return;
+  renderHistory();
   settingsSheet.hidden = false;
 }
 
@@ -556,6 +601,7 @@ function wireSettings() {
   document.getElementById("dialog-confirm").addEventListener("click", () => {
     dialogBackdrop.hidden = true;
     closeSettings();
+    recordCurrentMatch();
     resetGame();
   });
 
@@ -588,6 +634,34 @@ function wireSettings() {
 
   document.getElementById("daynight-switch").addEventListener("click", () => {
     setDayNightMode(!state.dayNightEnabled);
+  });
+
+  document.getElementById("btn-save-match").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    const saved = recordCurrentMatch();
+    renderHistory();
+    btn.textContent = saved ? "Partida guardada" : "Sin cambios que guardar";
+    clearTimeout(saveBtnTimer);
+    saveBtnTimer = setTimeout(() => {
+      btn.textContent = "Guardar partida";
+    }, 1800);
+  });
+
+  document.getElementById("btn-clear-history").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    const now = Date.now();
+    if (now - clearArmedAt > 3000) {
+      clearArmedAt = now;
+      btn.textContent = "¿Seguro? Toca otra vez";
+      setTimeout(() => {
+        if (Date.now() - clearArmedAt > 3000) btn.textContent = "Borrar historial";
+      }, 3200);
+      return;
+    }
+    clearArmedAt = 0;
+    btn.textContent = "Borrar historial";
+    clearHistory();
+    renderHistory();
   });
 
   dayNightBtn.addEventListener("click", () => {
