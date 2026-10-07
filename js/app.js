@@ -17,6 +17,18 @@ document.addEventListener("visibilitychange", () => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {});
+    const checkSwUpdate = () => {
+      navigator.serviceWorker
+        .getRegistration()
+        .then((reg) => {
+          if (reg) return reg.update();
+        })
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") checkSwUpdate();
+    });
+    setInterval(checkSwUpdate, 30 * 60 * 1000);
     let hadController = !!navigator.serviceWorker.controller;
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

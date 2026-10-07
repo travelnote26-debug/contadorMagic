@@ -80,7 +80,7 @@ class PlayerSection {
         </div>
       </div>
       <div class="cmd-mode" hidden>
-        <div class="cmd-mode-card" style="transform:rotate(${this.rotation}deg)"></div>
+        <div class="cmd-mode-body" style="--rot:${this.rotation}deg"></div>
       </div>
       <div class="highlight"></div>
     `;
@@ -102,7 +102,7 @@ class PlayerSection {
     this.cmdRows = root.querySelector(".cmd-rows");
     this.cmdTitle = root.querySelector(".cmd-title");
     this.cmdModeLayer = root.querySelector(".cmd-mode");
-    this.cmdModeCard = root.querySelector(".cmd-mode-card");
+    this.cmdModeBody = root.querySelector(".cmd-mode-body");
     this.cmdModeNum = null;
     this.cmdModeKey = "";
     this.elimBadge = root.querySelector(".elim-badge");
@@ -190,17 +190,17 @@ class PlayerSection {
       this.cmdModeKey = key;
       if (isOwner) {
         this.cmdModeNum = null;
-        this.cmdModeCard.innerHTML =
+        this.cmdModeBody.innerHTML =
           `<button class="cmd-mode-close" aria-label="Cerrar contadores">&#x2715;</button>`;
       } else {
-        this.cmdModeCard.innerHTML =
+        this.cmdModeBody.innerHTML =
           `<div class="cmd-mode-title">&#x2694; Daño a ${victim.name}</div>` +
+          `<div class="cmd-mode-num"></div>` +
           `<div class="cmd-mode-row">` +
-          `<button class="cmd-step" data-delta="-1" aria-label="Restar daño">&#x2212;</button>` +
-          `<span class="cmd-mode-num"></span>` +
-          `<button class="cmd-step" data-delta="1" aria-label="Sumar daño">+</button>` +
+          `<button class="cmd-mode-step" data-delta="-1" aria-label="Restar daño">&#x2212;</button>` +
+          `<button class="cmd-mode-step" data-delta="1" aria-label="Sumar daño">+</button>` +
           `</div>`;
-        this.cmdModeNum = this.cmdModeCard.querySelector(".cmd-mode-num");
+        this.cmdModeNum = this.cmdModeBody.querySelector(".cmd-mode-num");
       }
     }
     if (this.cmdModeNum) {
@@ -324,12 +324,12 @@ class PlayerSection {
       }
       if (e.target.closest(".cmd-close") || e.target === this.cmdOverlay) this.togglePanel(false);
     });
-    this.cmdModeCard.addEventListener("click", (e) => {
+    this.cmdModeLayer.addEventListener("click", (e) => {
       if (e.target.closest(".cmd-mode-close")) {
         closeCmdMode();
         return;
       }
-      const step = e.target.closest(".cmd-step");
+      const step = e.target.closest(".cmd-mode-step");
       if (step && cmdVictimId != null) {
         if (navigator.vibrate) navigator.vibrate(10);
         addCommanderDamage(cmdVictimId, this.player.id, Number(step.dataset.delta));
@@ -418,6 +418,11 @@ function renderCmdModeAll() {
 function resizeSections() {
   sections.forEach((s) => {
     const w = s.root.clientWidth;
+    const layerW = s.cmdModeLayer.clientWidth || w;
+    const layerH = s.cmdModeLayer.clientHeight || s.root.clientHeight;
+    const horizontal = s.rotation === 90 || s.rotation === -90;
+    s.root.style.setProperty("--bw", Math.max(1, horizontal ? layerH : layerW) + "px");
+    s.root.style.setProperty("--bh", Math.max(1, horizontal ? layerW : layerH) + "px");
     let fs;
     if (w < 130) fs = 56;
     else if (w < 180) fs = 72;

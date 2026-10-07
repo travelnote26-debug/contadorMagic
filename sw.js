@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "contadormagic-v14";
+const CACHE = "contadormagic-v15";
 const ASSETS = [
   "./",
   "./index.html",
@@ -18,10 +18,15 @@ const ASSETS = [
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    Promise.all(
+      ASSETS.map((url) =>
+        fetch(url, { cache: "no-cache" })
+          .then((res) => {
+            if (!res.ok) throw new Error("Fallo al precachear " + url);
+            return caches.open(CACHE).then((cache) => cache.put(url, res));
+          })
+      )
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -36,7 +41,7 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  const refresh = fetch(e.request)
+  const refresh = fetch(e.request, { cache: "no-cache" })
     .then((res) => {
       if (res.ok && e.request.url.startsWith(self.location.origin)) {
         const clone = res.clone();
