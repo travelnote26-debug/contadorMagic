@@ -20,8 +20,6 @@ function createInitialState() {
     players: [],
     initialLife: 21,
     playerCount: 4,
-    teamsEnabled: false,
-    teamCount: 2,
     commanderMode: false,
     poisonMode: false,
     dayNightEnabled: false,
@@ -37,79 +35,51 @@ function createPlayers(playerCount, initialLife) {
     name: "Jugador " + (i + 1),
     currentLife: initialLife,
     color: MagicColors[i % MagicColors.length].key,
-    team: null,
     cmdDamage: {},
     poison: 0
   }));
 }
 
-function distributeTeams(st) {
-  if (!st.teamsEnabled || st.players.length < 2) {
-    return { ...st, players: st.players.map((p) => ({ ...p, team: null })) };
-  }
-  return {
-    ...st,
-    players: st.players.map((p, index) => ({ ...p, team: (index % st.teamCount) + 1 }))
-  };
+function commit() {
+  persist();
+  notify();
 }
 
 function modifyPlayer(playerId, transform, saveHistory = true) {
   const updated = state.players.map((p) => (p.id === playerId ? transform(p) : p));
   const history = saveHistory ? state.history.concat([state.players]) : state.history;
   state = { ...state, players: updated, history: history.slice(-MAX_HISTORY) };
-  persist();
-  notify();
-}
-
-function startGame() {
-  const players = createPlayers(state.playerCount, state.initialLife);
-  state = distributeTeams({ ...state, players, history: [], startingPlayerId: null });
-  persist();
-  notify();
+  commit();
 }
 
 function updateLife(playerId, delta) {
   modifyPlayer(playerId, (p) => ({ ...p, currentLife: p.currentLife + delta }));
 }
 
-function setLife(playerId, value) {
-  modifyPlayer(playerId, (p) => ({ ...p, currentLife: value }));
-}
-
 function undo() {
   if (state.history.length === 0) return;
   const previous = state.history[state.history.length - 1];
   state = { ...state, players: previous, history: state.history.slice(0, -1) };
-  persist();
-  notify();
+  commit();
 }
 
 function setPlayerColor(playerId, color) {
   modifyPlayer(playerId, (p) => ({ ...p, color }), false);
 }
 
-function setPlayerTeam(playerId, team) {
-  modifyPlayer(playerId, (p) => ({ ...p, team }), false);
-}
-
-function updateConfig({ initialLife, playerCount, teamsEnabled, teamCount } = {}) {
-  const next = {
+function updateConfig({ initialLife, playerCount } = {}) {
+  state = {
     ...state,
     initialLife: initialLife != null ? initialLife : state.initialLife,
-    playerCount: playerCount != null ? playerCount : state.playerCount,
-    teamsEnabled: teamsEnabled != null ? teamsEnabled : state.teamsEnabled,
-    teamCount: teamCount != null ? teamCount : state.teamCount
+    playerCount: playerCount != null ? playerCount : state.playerCount
   };
-  state = distributeTeams(next);
-  persist();
-  notify();
+  commit();
 }
 
 function resetGame() {
   const players = createPlayers(state.playerCount, state.initialLife);
-  state = distributeTeams({ ...state, players, history: [], startingPlayerId: null });
-  persist();
-  notify();
+  state = { ...state, players, history: [], startingPlayerId: null };
+  commit();
 }
 
 function setCommanderMode(on) {
@@ -120,8 +90,7 @@ function setCommanderMode(on) {
     resetGame();
     return;
   }
-  persist();
-  notify();
+  commit();
 }
 
 function applyLifePreset(value) {
@@ -153,8 +122,7 @@ function maxCommanderDamage(p) {
 function setPoisonMode(on) {
   if (on === !!state.poisonMode) return;
   state = { ...state, poisonMode: !!on };
-  persist();
-  notify();
+  commit();
 }
 
 function addPoison(playerId, delta) {
@@ -174,44 +142,42 @@ function isEliminated(player, poisonMode) {
 function setDayNightMode(on) {
   if (on === !!state.dayNightEnabled) return;
   state = { ...state, dayNightEnabled: !!on };
-  persist();
-  notify();
+  commit();
 }
 
 function toggleDayNight() {
   if (!state.dayNightEnabled) return;
   state = { ...state, isNight: !state.isNight };
-  persist();
-  notify();
+  commit();
 }
 
 function setStartingPlayer(playerId) {
   state = { ...state, startingPlayerId: playerId };
-  persist();
-  notify();
+  commit();
 }
 
-function playerToJson(p) {
-  const obj = { id: p.id, name: p.name, currentLife: p.currentLife, color: p.color };
-  if (p.team != null) obj.team = p.team;
-  obj.cmdDamage = { ...(p.cmdDamage || {}) };
-  obj.poison = p.poison || 0;
-  return obj;
+function normalizePlayer(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    currentLife: p.currentLife,
+    color: p.color,
+    cmdDamage: { ...(p.cmdDamage || {}) },
+    poison: p.poison || 0
+  };
 }
 
 function serialize(st) {
   return JSON.stringify({
     initialLife: st.initialLife,
     playerCount: st.playerCount,
-    teamsEnabled: st.teamsEnabled,
-    teamCount: st.teamCount,
     commanderMode: !!st.commanderMode,
     poisonMode: !!st.poisonMode,
     dayNightEnabled: !!st.dayNightEnabled,
     isNight: st.isNight !== false,
     startingPlayerId: st.startingPlayerId != null ? st.startingPlayerId : null,
-    players: st.players.map(playerToJson),
-    history: st.history.slice(-MAX_HISTORY).map((list) => list.map(playerToJson))
+    players: st.players.map(normalizePlayer),
+    history: st.history.slice(-MAX_HISTORY).map((list) => list.map(normalizePlayer))
   });
 }
 
@@ -220,19 +186,15 @@ function deserialize(json) {
     const r = JSON.parse(json);
     if (!r || !Array.isArray(r.players)) return null;
     return {
-      players: r.players.map((p) => ({ cmdDamage: {}, poison: 0, ...p })),
+      players: r.players.map(normalizePlayer),
       initialLife: r.initialLife,
       playerCount: r.playerCount,
-      teamsEnabled: r.teamsEnabled,
-      teamCount: r.teamCount,
       commanderMode: !!r.commanderMode,
       poisonMode: !!r.poisonMode,
       dayNightEnabled: !!r.dayNightEnabled,
       isNight: r.isNight !== false,
-      history: (Array.isArray(r.history) ? r.history : []).map((list) =>
-        list.map((p) => ({ cmdDamage: {}, poison: 0, ...p }))
-      ),
-      startingPlayerId: r.startingPlayerId != null ? r.startingPlayerId : null
+      startingPlayerId: r.startingPlayerId != null ? r.startingPlayerId : null,
+      history: (Array.isArray(r.history) ? r.history : []).map((list) => list.map(normalizePlayer))
     };
   } catch (e) {
     return null;
@@ -245,13 +207,13 @@ function load() {
     if (raw) {
       const restored = deserialize(raw);
       if (restored && restored.players.length > 0) {
-        state = { ...restored, teamsEnabled: false };
+        state = restored;
         return;
       }
     }
   } catch (e) {}
   state = createInitialState();
-  startGame();
+  resetGame();
 }
 
 function persist() {

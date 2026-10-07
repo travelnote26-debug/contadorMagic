@@ -8,64 +8,6 @@ function effectAlpha(progress) {
   return Math.max(0, Math.min(1, a));
 }
 
-function drawClawEffect(ctx, w, h, progress) {
-  const alpha = effectAlpha(progress);
-  const cx = w / 2;
-  const cy = h / 2;
-  const dpx = Math.max(1, Math.min(w, h) / 200);
-  const scratch = Math.min(progress / 0.4, 1);
-  const markLen = h * 0.4;
-  const spacing = w * 0.055;
-
-  ctx.save();
-
-  ctx.globalAlpha = alpha * 0.14;
-  ctx.fillStyle = "#CC0000";
-  ctx.beginPath();
-  ctx.arc(cx, cy, markLen * 0.7, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.lineCap = "round";
-  for (let i = -1; i <= 1; i++) {
-    const ox = i * spacing;
-    const sx = cx + ox + markLen * 0.12;
-    const sy = cy - markLen * 0.5;
-    const curLen = markLen * scratch;
-    const ex = sx - curLen * 0.25;
-    const ey = sy + curLen;
-
-    ctx.globalAlpha = alpha * 0.9;
-    ctx.strokeStyle = "#8B0000";
-    ctx.lineWidth = 5 * dpx;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
-
-    ctx.globalAlpha = alpha * 0.55;
-    ctx.strokeStyle = "#FF2222";
-    ctx.lineWidth = 1.8 * dpx;
-    ctx.beginPath();
-    ctx.moveTo(sx + dpx, sy + dpx);
-    ctx.lineTo(ex + dpx, ey + dpx);
-    ctx.stroke();
-  }
-
-  if (progress > 0.1) {
-    for (let i = 0; i < 6; i++) {
-      const seed = i * 137 + 42;
-      const ang = ((seed % 360) * Math.PI) / 180;
-      const dist = markLen * 0.3 * progress + (seed % 20);
-      ctx.globalAlpha = alpha * 0.45;
-      ctx.fillStyle = "#CC3333";
-      ctx.beginPath();
-      ctx.arc(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist, 2 * dpx * (1 - progress), 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-}
-
 const POTION_GREEN = {
   glow: "#00CC66",
   glowOuter: "#00FF88",

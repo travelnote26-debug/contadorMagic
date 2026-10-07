@@ -60,13 +60,13 @@ function assertEq(actual, expected, msg) {
 
 console.log("== createPlayers / colors ==");
 assertEq(
-  run("createPlayers(4, 21).map(p => [p.id, p.name, p.currentLife, p.color, p.team])"),
-  [[1, "Jugador 1", 21, "WHITE", null], [2, "Jugador 2", 21, "BLUE", null], [3, "Jugador 3", 21, "BLACK", null], [4, "Jugador 4", 21, "RED", null]],
+  run("createPlayers(4, 21).map(p => [p.id, p.name, p.currentLife, p.color])"),
+  [[1, "Jugador 1", 21, "WHITE"], [2, "Jugador 2", 21, "BLUE"], [3, "Jugador 3", 21, "BLACK"], [4, "Jugador 4", 21, "RED"]],
   "4 jugadores, 21 vidas, colores ciclicos"
 );
 
 console.log("== life update / undo / history ==");
-run("state = distributeTeams({ ...createInitialState(), players: createPlayers(4, 21) });");
+run("state = { ...createInitialState(), players: createPlayers(4, 21) };");
 run("updateLife(1, -3); updateLife(1, 2);");
 assertEq(run("state.players[0].currentLife"), 20, "vida 21 -> 18 -> 20");
 assertEq(run("state.history.length"), 2, "historial con 2 entradas");
@@ -75,7 +75,7 @@ assertEq(run("state.players[0].currentLife"), 18, "undo vuelve a 18");
 assertEq(run("state.history.length"), 1, "historial reduce a 1");
 
 console.log("== historia limitada ==");
-run("state = distributeTeams({ ...createInitialState(), players: createPlayers(2, 20) });");
+run("state = { ...createInitialState(), players: createPlayers(2, 20) };");
 for (let i = 0; i < 30; i++) run("updateLife(1, 1);");
 assertEq(run("state.history.length"), 20, "historial maximo 20");
 
@@ -83,21 +83,14 @@ console.log("== updateConfig no recrea jugadores ==");
 run("updateConfig({ playerCount: 2 });");
 assertEq(run("state.players.length"), 2, "cambio de config mantiene jugadores");
 
-console.log("== equipos ==");
-run("state = createInitialState(); state = { ...state, players: createPlayers(4, 20) };");
-run("updateConfig({ teamsEnabled: true, teamCount: 2 });");
-assertEq(run("state.players.map(p => p.team)"), [1, 2, 1, 2], "equipos alternados con 2 equipos");
-run("updateConfig({ teamsEnabled: false });");
-assertEq(run("state.players.map(p => p.team)"), [null, null, null, null], "sin equipos team=null");
-
 console.log("== resetGame ==");
-run("updateConfig({ teamsEnabled: true }); resetGame();");
+run("state = { ...state, players: createPlayers(4, 20) }; resetGame();");
 assertEq(run("state.players.every(p => p.currentLife === state.initialLife)"), true, "reset vuelve a vidas iniciales");
 assertEq(run("state.startingPlayerId"), null, "reset limpia jugador inicial");
 assertEq(run("state.history.length"), 0, "reset limpia historial");
 
 console.log("== serializacion ==");
-run("state = distributeTeams({ ...createInitialState(), players: createPlayers(3, 21), teamsEnabled: true, teamCount: 3 });");
+run("state = { ...createInitialState(), players: createPlayers(3, 21) };");
 run("updateLife(2, -5); setStartingPlayer(2);");
 function deepEqual(a, b) {
   if (a === b) return true;
@@ -126,7 +119,7 @@ assertEq(run("state.players[1].currentLife"), 16, "load() restaura vidas");
 assertEq(run("state.startingPlayerId"), 2, "load() restaura jugador inicial");
 
 console.log("== presets de vida ==");
-run("state = createInitialState(); state = distributeTeams({ ...state, players: createPlayers(4, 21) });");
+run("state = { ...createInitialState(), players: createPlayers(4, 21) };");
 run("applyLifePreset(30);");
 assertEq(run("state.initialLife"), 30, "preset 30 actualiza config");
 assertEq(run("state.players.every(p => p.currentLife === 30)"), true, "preset 30 aplica ya las vidas");

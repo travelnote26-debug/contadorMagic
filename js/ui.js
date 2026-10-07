@@ -1,11 +1,5 @@
 "use strict";
 
-const TeamColors = ["#5B8C5A", "#B85C38", "#4A90A4", "#D4A843", "#8E6F9E", "#C46A6A"];
-
-function teamColor(idx) {
-  return TeamColors[Math.min(idx, TeamColors.length - 1)];
-}
-
 const boardEl = document.getElementById("board");
 const settingsSheet = document.getElementById("settings-sheet");
 const settingsRune = document.getElementById("settings-rune");
@@ -15,6 +9,7 @@ const dayNightBtn = document.getElementById("daynight-btn");
 let sections = [];
 let lastKey = "";
 let cmdVictimId = null;
+let boardFrozen = false;
 
 class PlayerSection {
   constructor(player, rotation) {
@@ -36,14 +31,12 @@ class PlayerSection {
     root.className = "player-section";
     root.style.setProperty("--card-bg", color.cardBgColor);
     root.style.setProperty("--text-color", textColor);
-    root.style.setProperty("--team-color", "transparent");
     root.innerHTML = `
       <div class="card-frame"></div>
       <div class="frame-gradient"></div>
       <div class="pinline pinline-outer"></div>
       <div class="pinline pinline-gold"></div>
       <div class="pinline pinline-inner"></div>
-      <div class="team-border"></div>
       <canvas class="effects-canvas" style="transform:rotate(${this.rotation}deg)"></canvas>
       <div class="player-content" style="transform:rotate(${this.rotation}deg)">
         <div class="slot-top">
@@ -56,7 +49,6 @@ class PlayerSection {
           <button class="life-btn plus" aria-label="Sumar vida">+</button>
         </div>
         <div class="mana-picker">${manaSymbolSVG(this.player.color, { size: 30 })}</div>
-        <div class="team-badge" hidden></div>
       </div>
       <div class="pills-top" data-rot="${this.rotation}" style="--rot:${this.rotation}deg">
         <div class="cmd-pill" hidden>
@@ -70,13 +62,13 @@ class PlayerSection {
       <div class="color-overlay" hidden>
         <div class="color-circle" style="transform:rotate(${this.rotation}deg)">${this.buildColorCircle()}</div>
       </div>
-      <div class="cmd-overlay" hidden>
-        <div class="cmd-card" style="transform:rotate(${this.rotation}deg)">
-          <div class="cmd-head">
-            <span class="cmd-title"></span>
-            <button class="cmd-close" aria-label="Cerrar">&#x2715;</button>
+      <div class="poison-panel" hidden>
+        <div class="poison-card" style="--rot:${this.rotation}deg">
+          <div class="poison-head">
+            <span class="poison-title">Contador de veneno</span>
+            <button class="poison-close" aria-label="Cerrar">&#x2715;</button>
           </div>
-          <div class="cmd-rows"></div>
+          <div class="poison-rows"></div>
         </div>
       </div>
       <div class="cmd-mode" hidden>
@@ -92,28 +84,25 @@ class PlayerSection {
     this.ctx = this.effectsCanvas.getContext("2d");
     this.manaPickerEl = root.querySelector(".mana-picker");
     this.colorOverlay = root.querySelector(".color-overlay");
-    this.teamBadgeEl = root.querySelector(".team-badge");
     this.highlightEl = root.querySelector(".highlight");
     this.cmdPill = root.querySelector(".cmd-pill");
     this.cmdVal = root.querySelector(".cmd-val");
     this.poisonPill = root.querySelector(".poison-pill");
     this.poisonVal = root.querySelector(".poison-val");
-    this.cmdOverlay = root.querySelector(".cmd-overlay");
-    this.cmdRows = root.querySelector(".cmd-rows");
-    this.cmdTitle = root.querySelector(".cmd-title");
+    this.poisonPanel = root.querySelector(".poison-panel");
+    this.poisonRows = root.querySelector(".poison-rows");
     this.cmdModeLayer = root.querySelector(".cmd-mode");
     this.cmdModeBody = root.querySelector(".cmd-mode-body");
     this.cmdModeNum = null;
     this.cmdModeKey = "";
     this.elimBadge = root.querySelector(".elim-badge");
-    this.panelMode = null;
 
     root.querySelector(".minus").addEventListener("click", () => this.onLife(-1));
     root.querySelector(".plus").addEventListener("click", () => this.onLife(1));
     this.manaPickerEl.addEventListener("click", () => this.toggleColorPicker(true));
     this.bindLongPress();
     this.setupColorOverlay();
-    this.setupPanels();
+    this.setupCardControls();
   }
 
   onLife(delta) {
@@ -133,16 +122,6 @@ class PlayerSection {
     this.root.style.setProperty("--card-bg", color.cardBgColor);
     this.manaPickerEl.innerHTML = manaSymbolSVG(player.color, { size: 30 });
 
-    const hasTeam = state.teamsEnabled && player.team != null;
-    this.teamBorderEl().style.display = hasTeam ? "" : "none";
-    if (hasTeam) {
-      this.root.style.setProperty("--team-color", teamColor(player.team - 1));
-      this.teamBadgeEl.textContent = "Eq. " + player.team;
-      this.teamBadgeEl.hidden = false;
-    } else {
-      this.teamBadgeEl.hidden = true;
-    }
-
     const showCmd = !!state.commanderMode;
     const showPoison = !!state.poisonMode;
     this.cmdPill.hidden = !showCmd;
@@ -157,9 +136,9 @@ class PlayerSection {
       this.poisonVal.textContent = poison + "/10";
       this.poisonPill.classList.toggle("over", poison >= 10);
     }
-    if (!this.cmdOverlay.hidden) {
-      if (this.panelMode === "poison" && !showPoison) this.togglePanel(false);
-      else this.renderPanelRows();
+    if (!this.poisonPanel.hidden) {
+      if (showPoison) this.renderPoisonRows();
+      else this.togglePoisonPanel(false);
     }
 
     const eliminated = isEliminated(player, state.poisonMode);
@@ -208,10 +187,6 @@ class PlayerSection {
       this.cmdModeNum.textContent = dmg + "/21";
       this.cmdModeNum.classList.toggle("over", dmg >= 21);
     }
-  }
-
-  teamBorderEl() {
-    return this.root.querySelector(".team-border");
   }
 
   triggerLifeEffect(delta) {
@@ -312,17 +287,17 @@ class PlayerSection {
     this.root.querySelectorAll(".life-btn").forEach((b) => b.classList.toggle("disabled", open));
   }
 
-  setupPanels() {
+  setupCardControls() {
     this.cmdPill.addEventListener("click", () => toggleCmdMode(this.player.id));
-    this.poisonPill.addEventListener("click", () => this.togglePanel(true, "poison"));
-    this.cmdOverlay.addEventListener("click", (e) => {
-      const step = e.target.closest(".cmd-step");
+    this.poisonPill.addEventListener("click", () => this.togglePoisonPanel(true));
+    this.poisonPanel.addEventListener("click", (e) => {
+      const step = e.target.closest(".poison-step");
       if (step) {
         if (navigator.vibrate) navigator.vibrate(10);
         addPoison(this.player.id, Number(step.dataset.delta));
         return;
       }
-      if (e.target.closest(".cmd-close") || e.target === this.cmdOverlay) this.togglePanel(false);
+      if (e.target.closest(".poison-close") || e.target === this.poisonPanel) this.togglePoisonPanel(false);
     });
     this.cmdModeLayer.addEventListener("click", (e) => {
       if (e.target.closest(".cmd-mode-close")) {
@@ -337,28 +312,36 @@ class PlayerSection {
     });
   }
 
-  togglePanel(open, mode) {
-    if (open) {
-      this.panelMode = mode;
-      this.cmdTitle.textContent = "Contador de veneno";
-      this.renderPanelRows();
-    } else {
-      this.panelMode = null;
-    }
-    this.cmdOverlay.hidden = !open;
+  togglePoisonPanel(open) {
+    if (open) this.renderPoisonRows();
+    this.poisonPanel.hidden = !open;
     this.root.querySelectorAll(".life-btn").forEach((b) => b.classList.toggle("disabled", open));
   }
 
-  renderPanelRows() {
+  renderPoisonRows() {
     const poison = this.player.poison || 0;
-    this.cmdRows.innerHTML =
-      `<div class="cmd-line">` +
-      `<span class="cmd-name">Veneno</span>` +
-      `<button class="cmd-step" data-delta="-1" aria-label="Restar veneno">&#x2212;</button>` +
-      `<span class="cmd-num${poison >= 10 ? " over" : ""}">${poison}</span>` +
-      `<button class="cmd-step" data-delta="1" aria-label="Sumar veneno">+</button>` +
+    this.poisonRows.innerHTML =
+      `<div class="poison-line">` +
+      `<span class="poison-name">Veneno</span>` +
+      `<button class="poison-step" data-delta="-1" aria-label="Restar veneno">&#x2212;</button>` +
+      `<span class="poison-num${poison >= 10 ? " over" : ""}">${poison}</span>` +
+      `<button class="poison-step" data-delta="1" aria-label="Sumar veneno">+</button>` +
       `</div>`;
   }
+}
+
+function freezeBoard() {
+  if (boardFrozen) return;
+  const rect = boardEl.getBoundingClientRect();
+  if (rect.width < 10 || rect.height < 10) return;
+  boardFrozen = true;
+  boardEl.style.width = Math.round(rect.width) + "px";
+  boardEl.style.height = Math.round(rect.height) + "px";
+  boardEl.style.left = "50%";
+  boardEl.style.top = "50%";
+  boardEl.style.right = "auto";
+  boardEl.style.bottom = "auto";
+  boardEl.style.transform = "translate(-50%, -50%)";
 }
 
 function rebuildSections(layout) {
@@ -378,6 +361,7 @@ function rebuildSections(layout) {
     boardEl.appendChild(rowEl);
   });
   lastKey = state.players.map((p) => p.id).join(",");
+  freezeBoard();
   resizeSections();
 }
 

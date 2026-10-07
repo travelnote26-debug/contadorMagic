@@ -1,33 +1,32 @@
 "use strict";
 
-let wakeLock = null;
+const hasServiceWorker = "serviceWorker" in navigator;
 
 async function requestWakeLock() {
   try {
-    if ("wakeLock" in navigator) {
-      wakeLock = await navigator.wakeLock.request("screen");
-    }
+    if ("wakeLock" in navigator) await navigator.wakeLock.request("screen");
   } catch (e) {}
 }
 
+function checkSwUpdate() {
+  if (!hasServiceWorker) return;
+  navigator.serviceWorker
+    .getRegistration()
+    .then((reg) => {
+      if (reg) return reg.update();
+    })
+    .catch(() => {});
+}
+
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") requestWakeLock();
+  if (document.visibilityState !== "visible") return;
+  requestWakeLock();
+  checkSwUpdate();
 });
 
-if ("serviceWorker" in navigator) {
+if (hasServiceWorker) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {});
-    const checkSwUpdate = () => {
-      navigator.serviceWorker
-        .getRegistration()
-        .then((reg) => {
-          if (reg) return reg.update();
-        })
-        .catch(() => {});
-    };
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") checkSwUpdate();
-    });
     setInterval(checkSwUpdate, 30 * 60 * 1000);
     let hadController = !!navigator.serviceWorker.controller;
     let refreshing = false;
