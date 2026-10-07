@@ -14,6 +14,7 @@ const dayNightBtn = document.getElementById("daynight-btn");
 
 let sections = [];
 let lastKey = "";
+let cmdVictimId = null;
 
 class PlayerSection {
   constructor(player, rotation) {
@@ -78,6 +79,9 @@ class PlayerSection {
           <div class="cmd-rows"></div>
         </div>
       </div>
+      <div class="cmd-mode" hidden>
+        <div class="cmd-mode-card" style="transform:rotate(${this.rotation}deg)"></div>
+      </div>
       <div class="highlight"></div>
     `;
     this.root = root;
@@ -97,6 +101,10 @@ class PlayerSection {
     this.cmdOverlay = root.querySelector(".cmd-overlay");
     this.cmdRows = root.querySelector(".cmd-rows");
     this.cmdTitle = root.querySelector(".cmd-title");
+    this.cmdModeLayer = root.querySelector(".cmd-mode");
+    this.cmdModeCard = root.querySelector(".cmd-mode-card");
+    this.cmdModeNum = null;
+    this.cmdModeKey = "";
     this.elimBadge = root.querySelector(".elim-badge");
     this.panelMode = null;
 
@@ -150,11 +158,8 @@ class PlayerSection {
       this.poisonPill.classList.toggle("over", poison >= 10);
     }
     if (!this.cmdOverlay.hidden) {
-      if ((this.panelMode === "cmd" && !showCmd) || (this.panelMode === "poison" && !showPoison)) {
-        this.togglePanel(false);
-      } else {
-        this.renderPanelRows();
-      }
+      if (this.panelMode === "poison" && !showPoison) this.togglePanel(false);
+      else this.renderPanelRows();
     }
 
     const eliminated = isEliminated(player, state.poisonMode);
@@ -169,6 +174,39 @@ class PlayerSection {
       this.triggerLifeEffect(delta);
     } else {
       this.lifeNumberEl.textContent = newLife;
+    }
+  }
+
+  renderCmdMode() {
+    const victim =
+      cmdVictimId != null && state.commanderMode
+        ? state.players.find((p) => p.id === cmdVictimId)
+        : null;
+    this.cmdModeLayer.hidden = !victim;
+    if (!victim) return;
+    const isOwner = victim.id === this.player.id;
+    const key = victim.id + (isOwner ? ":close" : ":counter");
+    if (this.cmdModeKey !== key) {
+      this.cmdModeKey = key;
+      if (isOwner) {
+        this.cmdModeNum = null;
+        this.cmdModeCard.innerHTML =
+          `<button class="cmd-mode-close" aria-label="Cerrar contadores">&#x2715;</button>`;
+      } else {
+        this.cmdModeCard.innerHTML =
+          `<div class="cmd-mode-title">&#x2694; Daño a ${victim.name}</div>` +
+          `<div class="cmd-mode-row">` +
+          `<button class="cmd-step" data-delta="-1" aria-label="Restar daño">&#x2212;</button>` +
+          `<span class="cmd-mode-num"></span>` +
+          `<button class="cmd-step" data-delta="1" aria-label="Sumar daño">+</button>` +
+          `</div>`;
+        this.cmdModeNum = this.cmdModeCard.querySelector(".cmd-mode-num");
+      }
+    }
+    if (this.cmdModeNum) {
+      const dmg = ((victim.cmdDamage || {})[this.player.id]) || 0;
+      this.cmdModeNum.textContent = dmg + "/21";
+      this.cmdModeNum.classList.toggle("over", dmg >= 21);
     }
   }
 
@@ -275,24 +313,34 @@ class PlayerSection {
   }
 
   setupPanels() {
-    this.cmdPill.addEventListener("click", () => this.togglePanel(true, "cmd"));
+    this.cmdPill.addEventListener("click", () => toggleCmdMode(this.player.id));
     this.poisonPill.addEventListener("click", () => this.togglePanel(true, "poison"));
     this.cmdOverlay.addEventListener("click", (e) => {
       const step = e.target.closest(".cmd-step");
       if (step) {
         if (navigator.vibrate) navigator.vibrate(10);
-        if (this.panelMode === "poison") addPoison(this.player.id, Number(step.dataset.delta));
-        else addCommanderDamage(this.player.id, Number(step.dataset.attacker), Number(step.dataset.delta));
+        addPoison(this.player.id, Number(step.dataset.delta));
         return;
       }
       if (e.target.closest(".cmd-close") || e.target === this.cmdOverlay) this.togglePanel(false);
+    });
+    this.cmdModeCard.addEventListener("click", (e) => {
+      if (e.target.closest(".cmd-mode-close")) {
+        closeCmdMode();
+        return;
+      }
+      const step = e.target.closest(".cmd-step");
+      if (step && cmdVictimId != null) {
+        if (navigator.vibrate) navigator.vibrate(10);
+        addCommanderDamage(cmdVictimId, this.player.id, Number(step.dataset.delta));
+      }
     });
   }
 
   togglePanel(open, mode) {
     if (open) {
       this.panelMode = mode;
-      this.cmdTitle.textContent = mode === "poison" ? "Contador de veneno" : "Daño de comandante";
+      this.cmdTitle.textContent = "Contador de veneno";
       this.renderPanelRows();
     } else {
       this.panelMode = null;
@@ -302,32 +350,14 @@ class PlayerSection {
   }
 
   renderPanelRows() {
-    const me = this.player;
-    if (this.panelMode === "poison") {
-      const poison = me.poison || 0;
-      this.cmdRows.innerHTML =
-        `<div class="cmd-line">` +
-        `<span class="cmd-name">Veneno</span>` +
-        `<button class="cmd-step" data-delta="-1" aria-label="Restar veneno">&#x2212;</button>` +
-        `<span class="cmd-num${poison >= 10 ? " over" : ""}">${poison}</span>` +
-        `<button class="cmd-step" data-delta="1" aria-label="Sumar veneno">+</button>` +
-        `</div>`;
-      return;
-    }
-    this.cmdRows.innerHTML = state.players
-      .filter((p) => p.id !== me.id)
-      .map((p) => {
-        const dmg = (me.cmdDamage && me.cmdDamage[p.id]) || 0;
-        return (
-          `<div class="cmd-line">` +
-          `<span class="cmd-name">${p.name}</span>` +
-          `<button class="cmd-step" data-attacker="${p.id}" data-delta="-1" aria-label="Restar daño">&#x2212;</button>` +
-          `<span class="cmd-num${dmg >= 21 ? " over" : ""}">${dmg}</span>` +
-          `<button class="cmd-step" data-attacker="${p.id}" data-delta="1" aria-label="Sumar daño">+</button>` +
-          `</div>`
-        );
-      })
-      .join("");
+    const poison = this.player.poison || 0;
+    this.cmdRows.innerHTML =
+      `<div class="cmd-line">` +
+      `<span class="cmd-name">Veneno</span>` +
+      `<button class="cmd-step" data-delta="-1" aria-label="Restar veneno">&#x2212;</button>` +
+      `<span class="cmd-num${poison >= 10 ? " over" : ""}">${poison}</span>` +
+      `<button class="cmd-step" data-delta="1" aria-label="Sumar veneno">+</button>` +
+      `</div>`;
   }
 }
 
@@ -357,7 +387,32 @@ function updateSections() {
     const p = byId.get(s.player.id);
     if (p) s.update(p);
   });
+  syncCmdMode();
   resizeSections();
+}
+
+function toggleCmdMode(id) {
+  cmdVictimId = cmdVictimId === id ? null : id;
+  renderCmdModeAll();
+}
+
+function closeCmdMode() {
+  cmdVictimId = null;
+  renderCmdModeAll();
+}
+
+function syncCmdMode() {
+  if (
+    cmdVictimId != null &&
+    (!state.commanderMode || !state.players.some((p) => p.id === cmdVictimId))
+  ) {
+    cmdVictimId = null;
+  }
+  renderCmdModeAll();
+}
+
+function renderCmdModeAll() {
+  sections.forEach((s) => s.renderCmdMode());
 }
 
 function resizeSections() {
@@ -376,7 +431,7 @@ function resizeSections() {
 function renderBoard() {
   const key = state.players.map((p) => p.id).join(",");
   if (key !== lastKey) rebuildSections(computeLayout(state.players));
-  else updateSections();
+  updateSections();
 }
 
 let rouletteActive = false;

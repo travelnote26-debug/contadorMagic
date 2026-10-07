@@ -540,6 +540,78 @@ body {
   opacity: 0.75;
 }
 
+.cmd-mode {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.cmd-mode[hidden] {
+  display: none;
+}
+
+.cmd-mode-card {
+  width: calc(100% - 16px);
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--dark-surface);
+  border: 1px solid var(--gold-dark);
+  border-radius: 12px;
+  padding: 8px 10px;
+  color: var(--parchment);
+}
+
+.cmd-mode-title {
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  text-align: center;
+}
+
+.cmd-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cmd-mode-num {
+  min-width: 46px;
+  text-align: center;
+  font-family: var(--medieval);
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.cmd-mode-num.over {
+  color: #FF6B6B;
+}
+
+.cmd-mode-close {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cmd-mode-close:active {
+  opacity: 0.75;
+}
+
 .elim-badge {
   position: absolute;
   z-index: 3;
