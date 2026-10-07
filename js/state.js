@@ -137,7 +137,11 @@ function addCommanderDamage(playerId, attackerId, delta) {
   if (next === current) return;
   modifyPlayer(playerId, (p) => {
     const cmdDamage = p.cmdDamage || {};
-    return { ...p, cmdDamage: { ...cmdDamage, [attackerId]: next } };
+    return {
+      ...p,
+      currentLife: p.currentLife - (next - current),
+      cmdDamage: { ...cmdDamage, [attackerId]: next }
+    };
   });
 }
 

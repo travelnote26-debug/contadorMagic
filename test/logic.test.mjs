@@ -158,6 +158,30 @@ assertEq(run("state.players[0].cmdDamage[3]"), 4, "undo revierte el ultimo daño
 run("resetGame();");
 assertEq(run("Object.keys(state.players[0].cmdDamage).length"), 0, "reset limpia el daño");
 
+console.log("== daño de comandante y vida ==");
+assertEq(run("state.players[0].currentLife"), 40, "vida inicial 40");
+run("addCommanderDamage(1, 2, 1);");
+assertEq(run("state.players[0].currentLife"), 39, "victim pierde 1 vida al sumar daño");
+assertEq(run("state.players[1].currentLife"), 40, "atacante no cambia de vida");
+run("addCommanderDamage(1, 2, -1);");
+assertEq(run("state.players[0].currentLife"), 40, "victim recupera vida al restar daño");
+run("addCommanderDamage(1, 2, 21);");
+assertEq(run("state.players[0].cmdDamage[2]"), 21, "daño llega a 21");
+assertEq(run("state.players[0].currentLife"), 19, "21 de daño restan 21 vidas");
+run("addCommanderDamage(1, 2, 5);");
+assertEq(run("state.players[0].cmdDamage[2]"), 21, "sobre 21 no sube el daño");
+assertEq(run("state.players[0].currentLife"), 19, "sobre 21 no toca la vida");
+run("addCommanderDamage(1, 2, -21); undo();");
+assertEq(run("state.players[0].cmdDamage[2]"), 21, "undo revierte el daño");
+assertEq(run("state.players[0].currentLife"), 19, "undo revierte daño y vida en un paso");
+run("addCommanderDamage(1, 2, -21);");
+assertEq(run("state.players[0].currentLife"), 40, "quitar el daño devuelve las vidas");
+run("addCommanderDamage(1, 2, 40); addCommanderDamage(1, 3, 19);");
+assertEq(run("state.players[0].currentLife"), 0, "dos rivales bajan la vida a 0");
+assertEq(run("isEliminated(state.players[0], state.poisonMode)"), true, "0 vidas -> eliminado");
+run("resetGame();");
+assertEq(run("state.players[0].currentLife"), 40, "reset devuelve las vidas");
+
 console.log("== contador de veneno ==");
 run("setPoisonMode(true);");
 assertEq(run("state.poisonMode"), true, "modo veneno activado");

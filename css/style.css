@@ -546,8 +546,8 @@ body {
   display: block;
   z-index: 7;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
-  box-shadow: inset 0 0 0 2px rgba(212, 175, 55, 0.55);
+  background: #0A0A0B;
+  box-shadow: inset 0 0 0 2px #75601E;
   pointer-events: auto;
 }
 
@@ -613,8 +613,8 @@ body {
   flex: 1 1 0;
   min-width: 0;
   border-radius: 12px;
-  background: rgba(139, 105, 20, 0.25);
-  border: 1px solid rgba(139, 105, 20, 0.65);
+  background: #231A05;
+  border: 1px solid #5D4614;
   color: var(--gold);
   font-family: var(--medieval);
   font-weight: bold;
@@ -624,7 +624,7 @@ body {
 }
 
 .cmd-mode-step:active {
-  opacity: 0.75;
+  filter: brightness(1.35);
 }
 
 .cmd-mode-close {
@@ -633,7 +633,7 @@ body {
   min-height: 0;
   border: none;
   border-radius: 14px;
-  background: rgba(0, 0, 0, 0.3);
+  background: #141414;
   color: var(--gold);
   font-family: var(--medieval);
   font-weight: bold;
@@ -643,7 +643,7 @@ body {
 }
 
 .cmd-mode-close:active {
-  opacity: 0.75;
+  filter: brightness(1.35);
 }
 
 .elim-badge {
