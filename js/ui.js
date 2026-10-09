@@ -230,7 +230,7 @@ class PlayerSection {
       const p = Math.min((now - start) / dur, 1);
       ctx.clearRect(0, 0, w, h);
       if (gain) drawPotionEffect(ctx, w, h, p);
-      else drawPotionEffect(ctx, w, h, p, POTION_RED);
+      else drawClawEffect(ctx, w, h, p, POTION_RED);
       if (p < 1) this.rafId = requestAnimationFrame(step);
       else ctx.clearRect(0, 0, w, h);
     };

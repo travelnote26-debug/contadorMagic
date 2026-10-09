@@ -24,15 +24,9 @@ const POTION_RED = {
   particle: "#FF6666"
 };
 
-function drawPotionEffect(ctx, w, h, progress, palette) {
-  const c = palette || POTION_GREEN;
-  const alpha = effectAlpha(progress);
+function drawEffectGlow(ctx, w, h, alpha, c) {
   const cx = w / 2;
   const cy = h / 2;
-  const dpx = Math.max(1, Math.min(w, h) / 200);
-  const yOff = -progress * h * 0.03;
-
-  ctx.save();
 
   ctx.globalAlpha = alpha * 0.14;
   ctx.fillStyle = c.glow;
@@ -45,6 +39,35 @@ function drawPotionEffect(ctx, w, h, progress, palette) {
   ctx.beginPath();
   ctx.arc(cx, cy, Math.min(w, h) * 0.5, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawEffectParticles(ctx, w, h, progress, alpha, c, dpx, yOff, cx, cy, unit) {
+  for (let i = 0; i < 8; i++) {
+    const seed = i * 97 + 17;
+    const ang = ((seed % 360) * Math.PI) / 180;
+    const dist = Math.min(w, h) * 0.13 + (seed % 25);
+    const rise = (1 + (i % 3) * 0.4) * progress;
+    const px = cx + Math.cos(ang) * dist * (0.5 + progress * 0.5);
+    const py = cy + Math.sin(ang) * dist - rise * unit * 0.5 + yOff;
+    ctx.globalAlpha = alpha * 0.55 * (1 - progress * 0.3);
+    ctx.fillStyle = c.particle;
+    ctx.beginPath();
+    ctx.arc(px, py, 2.5 * dpx * (1 - progress * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawPotionEffect(ctx, w, h, progress, palette) {
+  const c = palette || POTION_GREEN;
+  const alpha = effectAlpha(progress);
+  const cx = w / 2;
+  const cy = h / 2;
+  const dpx = Math.max(1, Math.min(w, h) / 200);
+  const yOff = -progress * h * 0.03;
+
+  ctx.save();
+
+  drawEffectGlow(ctx, w, h, alpha, c);
 
   const fh = h * 0.22;
   const fw = fh * 0.45;
@@ -85,37 +108,88 @@ function drawPotionEffect(ctx, w, h, progress, palette) {
   ctx.lineWidth = 2 * dpx;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  if (palette === POTION_RED) {
-    const scale = cs * 1.1;
-    const y = crossY;
-    const offsets = [-scale * 0.6, 0, scale * 0.6];
-    offsets.forEach((off, i) => {
-      ctx.beginPath();
-      ctx.moveTo(cx + off - scale * 0.5, y - scale * 0.4);
-      ctx.lineTo(cx + off + scale * 0.2, y + scale * 0.5);
-      ctx.stroke();
-    });
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(cx - cs, crossY);
-    ctx.lineTo(cx + cs, crossY);
-    ctx.moveTo(cx, crossY - cs);
-    ctx.lineTo(cx, crossY + cs);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(cx - cs, crossY);
+  ctx.lineTo(cx + cs, crossY);
+  ctx.moveTo(cx, crossY - cs);
+  ctx.lineTo(cx, crossY + cs);
+  ctx.stroke();
 
-  for (let i = 0; i < 8; i++) {
-    const seed = i * 97 + 17;
-    const ang = ((seed % 360) * Math.PI) / 180;
-    const dist = Math.min(w, h) * 0.13 + (seed % 25);
-    const rise = (1 + (i % 3) * 0.4) * progress;
-    const px = cx + Math.cos(ang) * dist * (0.5 + progress * 0.5);
-    const py = cy + Math.sin(ang) * dist - rise * fh * 0.5 + yOff;
-    ctx.globalAlpha = alpha * 0.55 * (1 - progress * 0.3);
-    ctx.fillStyle = c.particle;
-    ctx.beginPath();
-    ctx.arc(px, py, 2.5 * dpx * (1 - progress * 0.5), 0, Math.PI * 2);
-    ctx.fill();
-  }
+  drawEffectParticles(ctx, w, h, progress, alpha, c, dpx, yOff, cx, cy, fh);
+
+  ctx.restore();
+}
+
+function drawClawEffect(ctx, w, h, progress, palette) {
+  const c = palette || POTION_RED;
+  const alpha = effectAlpha(progress);
+  const cx = w / 2;
+  const cy = h / 2;
+  const unit = Math.min(w, h);
+  const dpx = Math.max(1, unit / 200);
+  const yOff = -progress * h * 0.03;
+
+  ctx.save();
+
+  drawEffectGlow(ctx, w, h, alpha, c);
+
+  const ang = Math.PI / 3;
+  const dirX = Math.cos(ang);
+  const dirY = Math.sin(ang);
+  const perpX = -Math.sin(ang);
+  const perpY = Math.cos(ang);
+
+  const clawLen = unit * 0.5;
+  const gap = unit * 0.085;
+  const bend = unit * 0.05;
+  const offsets = [-gap, 0, gap];
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  offsets.forEach((off, i) => {
+    const local = Math.max(0, Math.min(1, (progress - i * 0.12) / 0.55));
+    if (local <= 0) return;
+
+    const centerX = cx + perpX * off;
+    const centerY = cy + perpY * off + yOff;
+    const sx = centerX - dirX * clawLen * 0.5;
+    const sy = centerY - dirY * clawLen * 0.5;
+    const ex = centerX + dirX * clawLen * 0.5;
+    const ey = centerY + dirY * clawLen * 0.5;
+    const mx = (sx + ex) / 2 + perpX * bend;
+    const my = (sy + ey) / 2 + perpY * bend;
+
+    const path = () => {
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo(mx, my, ex, ey);
+    };
+
+    ctx.setLineDash([clawLen * local, clawLen * 2]);
+
+    ctx.globalAlpha = alpha * 0.85;
+    ctx.strokeStyle = c.body;
+    ctx.lineWidth = 4 * dpx;
+    path();
+    ctx.stroke();
+
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.strokeStyle = c.shine;
+    ctx.lineWidth = 1.8 * dpx;
+    path();
+    ctx.stroke();
+
+    ctx.globalAlpha = alpha * 0.5;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 0.7 * dpx;
+    path();
+    ctx.stroke();
+  });
+
+  ctx.setLineDash([]);
+
+  drawEffectParticles(ctx, w, h, progress, alpha, c, dpx, yOff, cx, cy, h * 0.22);
+
   ctx.restore();
 }
