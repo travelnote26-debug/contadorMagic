@@ -51,3 +51,21 @@ subscribe(() => {
 renderBoard();
 syncSettingsUI();
 requestWakeLock();
+
+(function(){
+  const setVh = () => {
+    const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--vh', h + 'px');
+    document.documentElement.style.setProperty('--dvh', window.innerHeight + 'px');
+  };
+  setVh();
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', setVh);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setVh);
+    window.visualViewport.addEventListener('scroll', setVh);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') setTimeout(setVh, 100);
+  });
+})();
