@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "contadormagic-v19";
+const CACHE = "contadormagic-v20";
 const ASSETS = [
   "./",
   "./index.html",
