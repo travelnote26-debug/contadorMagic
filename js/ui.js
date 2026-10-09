@@ -670,6 +670,18 @@ function wireSettings() {
   });
 }
 
-window.addEventListener("resize", () => {
+function handleViewportChange() {
+  void boardEl.offsetHeight;
   if (sections.length) resizeSections();
+}
+
+window.addEventListener("resize", handleViewportChange);
+window.addEventListener("orientationchange", handleViewportChange);
+window.addEventListener("pageshow", handleViewportChange);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", handleViewportChange);
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  setTimeout(handleViewportChange, 100);
 });
