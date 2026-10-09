@@ -34,68 +34,82 @@ function drawPotionEffect(ctx, w, h, progress, palette) {
 
   ctx.save();
 
-  ctx.globalAlpha = alpha * 0.14;
-  ctx.fillStyle = c.glow;
-  ctx.beginPath();
-  ctx.arc(cx, cy, Math.min(w, h) * 0.35, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.globalAlpha = alpha * 0.07;
-  ctx.fillStyle = c.glowOuter;
-  ctx.beginPath();
-  ctx.arc(cx, cy, Math.min(w, h) * 0.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  const fh = h * 0.22;
-  const fw = fh * 0.45;
-  const nw = fw * 0.35;
-  const nh = fh * 0.28;
-  const bodyTop = cy - fh * 0.15 + yOff;
-
-  const rrect = (x, y, wd, ht, rad) => {
+  const isRed = palette === POTION_RED;
+  
+  if (isRed) {
+    ctx.globalAlpha = alpha * 0.15;
+    ctx.fillStyle = c.glow;
     ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(x, y, wd, ht, rad);
-    } else {
-      ctx.moveTo(x + rad, y);
-      ctx.arcTo(x + wd, y, x + wd, y + ht, rad);
-      ctx.arcTo(x + wd, y + ht, x, y + ht, rad);
-      ctx.arcTo(x, y + ht, x, y, rad);
-      ctx.arcTo(x, y, x + wd, y, rad);
-      ctx.closePath();
-    }
-  };
+    ctx.arc(cx, cy, Math.min(w, h) * 0.45, 0, Math.PI * 2);
+    ctx.fill();
 
-  ctx.globalAlpha = alpha * 0.7;
-  ctx.fillStyle = c.body;
-  rrect(cx - fw / 2, bodyTop, fw, fh * 0.5, fw * 0.25);
-  ctx.fill();
-  rrect(cx - nw / 2, bodyTop - nh + 2 * dpx, nw, nh, nw * 0.15);
-  ctx.fill();
+    ctx.globalAlpha = alpha * 0.8;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 4 * dpx;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-  ctx.globalAlpha = alpha * 0.45;
-  ctx.fillStyle = c.shine;
-  rrect(cx - fw * 0.32, bodyTop + fh * 0.15, fw * 0.64, fh * 0.25, fw * 0.18);
-  ctx.fill();
-
-  const cs = fw * 0.18;
-  const crossY = bodyTop + fh * 0.25;
-  ctx.globalAlpha = alpha * 0.75;
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 2 * dpx;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  if (palette === POTION_RED) {
-    const scale = cs * 1.1;
-    const y = crossY;
-    const offsets = [-scale * 0.6, 0, scale * 0.6];
+    const scale = Math.min(w, h) * 0.25;
+    const y = cy + yOff;
+    const offsets = [-scale * 0.5, 0, scale * 0.5];
     offsets.forEach((off, i) => {
       ctx.beginPath();
-      ctx.moveTo(cx + off - scale * 0.5, y - scale * 0.4);
-      ctx.lineTo(cx + off + scale * 0.2, y + scale * 0.5);
+      ctx.moveTo(cx + off - scale * 0.4, y - scale * 0.5);
+      ctx.lineTo(cx + off + scale * 0.3, y + scale * 0.6);
       ctx.stroke();
     });
   } else {
+    ctx.globalAlpha = alpha * 0.14;
+    ctx.fillStyle = c.glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(w, h) * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.07;
+    ctx.fillStyle = c.glowOuter;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(w, h) * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    const fh = h * 0.22;
+    const fw = fh * 0.45;
+    const nw = fw * 0.35;
+    const nh = fh * 0.28;
+    const bodyTop = cy - fh * 0.15 + yOff;
+
+    const rrect = (x, y, wd, ht, rad) => {
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, wd, ht, rad);
+      } else {
+        ctx.moveTo(x + rad, y);
+        ctx.arcTo(x + wd, y, x + wd, y + ht, rad);
+        ctx.arcTo(x + wd, y + ht, x, y + ht, rad);
+        ctx.arcTo(x, y + ht, x, y, rad);
+        ctx.arcTo(x, y, x + wd, y, rad);
+        ctx.closePath();
+      }
+    };
+
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.fillStyle = c.body;
+    rrect(cx - fw / 2, bodyTop, fw, fh * 0.5, fw * 0.25);
+    ctx.fill();
+    rrect(cx - nw / 2, bodyTop - nh + 2 * dpx, nw, nh, nw * 0.15);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.45;
+    ctx.fillStyle = c.shine;
+    rrect(cx - fw * 0.32, bodyTop + fh * 0.15, fw * 0.64, fh * 0.25, fw * 0.18);
+    ctx.fill();
+
+    const cs = fw * 0.18;
+    const crossY = bodyTop + fh * 0.25;
+    ctx.globalAlpha = alpha * 0.75;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2 * dpx;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(cx - cs, crossY);
     ctx.lineTo(cx + cs, crossY);
