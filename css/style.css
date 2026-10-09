@@ -939,6 +939,28 @@ body {
   border-radius: 6px;
   padding: 8px 10px;
   margin-top: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.history-row:hover {
+  background: rgba(139, 105, 20, 0.2);
+  border-color: rgba(139, 105, 20, 0.6);
+}
+
+.history-row:active {
+  background: rgba(139, 105, 20, 0.3);
+  transform: scale(0.99);
+}
+
+.history-load-hint {
+  font-family: var(--medieval);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--gold-dark);
+  opacity: 0.75;
+  margin-top: 6px;
+  text-align: right;
 }
 
 .history-meta {

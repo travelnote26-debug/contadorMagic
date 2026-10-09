@@ -223,7 +223,7 @@ function persist() {
 }
 
 const HISTORY_KEY = "contadormagic_history";
-const MAX_MATCHES = 20;
+const MAX_MATCHES = 1;
 
 function loadHistory() {
   try {
@@ -251,14 +251,37 @@ function currentMatch(now) {
     initialLife: state.initialLife,
     commanderMode: !!state.commanderMode,
     poisonMode: !!state.poisonMode,
+    dayNightEnabled: !!state.dayNightEnabled,
+    isNight: state.isNight !== false,
+    startingPlayerId: state.startingPlayerId != null ? state.startingPlayerId : null,
     players: state.players.map((p) => ({
       id: p.id,
       name: p.name,
       color: p.color,
       currentLife: p.currentLife,
-      poison: p.poison || 0
+      poison: p.poison || 0,
+      cmdDamage: { ...(p.cmdDamage || {}) }
     }))
   };
+}
+
+function loadMatch(match) {
+  if (!match || !Array.isArray(match.players) || match.players.length === 0) return false;
+  const players = match.players.map(normalizePlayer);
+  state = {
+    ...state,
+    players,
+    initialLife: match.initialLife != null ? match.initialLife : state.initialLife,
+    playerCount: match.playerCount != null ? match.playerCount : players.length,
+    commanderMode: !!match.commanderMode,
+    poisonMode: !!match.poisonMode,
+    dayNightEnabled: !!match.dayNightEnabled,
+    isNight: match.isNight !== false,
+    startingPlayerId: match.startingPlayerId != null ? match.startingPlayerId : null,
+    history: []
+  };
+  commit();
+  return true;
 }
 
 function matchInProgress() {

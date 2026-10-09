@@ -523,8 +523,10 @@ function historyRow(match) {
       );
     })
     .join("");
-  return `<div class="history-row"><div class="history-meta">${fecha} · ${meta}</div>` +
-    `<div class="history-chips">${chips}</div></div>`;
+  return `<div class="history-row" data-id="${match.id}" role="button" tabindex="0">` +
+    `<div class="history-meta">${fecha} · ${meta}</div>` +
+    `<div class="history-chips">${chips}</div>` +
+    `<div class="history-load-hint">Toca para continuar</div></div>`;
 }
 
 function renderHistory() {
@@ -662,6 +664,23 @@ function wireSettings() {
     btn.textContent = "Borrar historial";
     clearHistory();
     renderHistory();
+  });
+
+  const historyList = document.getElementById("history-list");
+  const loadFromRow = (row) => {
+    if (!row) return;
+    const match = loadHistory().find((m) => m.id === Number(row.dataset.id));
+    if (match && loadMatch(match)) closeSettings();
+  };
+  historyList.addEventListener("click", (e) => {
+    loadFromRow(e.target.closest(".history-row"));
+  });
+  historyList.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const row = e.target.closest(".history-row");
+    if (!row) return;
+    e.preventDefault();
+    loadFromRow(row);
   });
 
   dayNightBtn.addEventListener("click", () => {
