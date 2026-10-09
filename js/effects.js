@@ -40,23 +40,23 @@ function drawPotionEffect(ctx, w, h, progress, palette) {
     ctx.globalAlpha = alpha * 0.12;
     ctx.fillStyle = c.glow;
     ctx.beginPath();
-    ctx.arc(cx, cy, Math.min(w, h) * 0.6, 0, Math.PI * 2);
+    ctx.arc(cx, cy, Math.min(w, h) * 0.7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = alpha * 0.9;
+    ctx.globalAlpha = alpha * 0.95;
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 6 * dpx;
+    ctx.lineWidth = 8 * dpx;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    const size = Math.min(w, h) * 0.5;
+    const size = Math.min(w, h) * 0.6;
     const y = cy + yOff;
     const slashes = 3;
     for (let i = 0; i < slashes; i++) {
-      const offset = (i - 1) * (size * 0.25);
+      const offset = (i - 1) * (size * 0.28);
       ctx.beginPath();
-      ctx.moveTo(cx + offset - size * 0.6, y - size * 0.8);
-      ctx.lineTo(cx + offset + size * 0.4, y + size * 0.8);
+      ctx.moveTo(cx + offset - size * 0.5, y - size * 0.7);
+      ctx.lineTo(cx + offset + size * 0.5, y + size * 0.7);
       ctx.stroke();
     }
   } else {
