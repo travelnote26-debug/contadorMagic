@@ -84,12 +84,30 @@ function drawPotionEffect(ctx, w, h, progress, palette) {
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 2 * dpx;
   ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(cx - cs, crossY);
-  ctx.lineTo(cx + cs, crossY);
-  ctx.moveTo(cx, crossY - cs);
-  ctx.lineTo(cx, crossY + cs);
-  ctx.stroke();
+  ctx.lineJoin = "round";
+  if (palette === POTION_RED) {
+    const scale = cs * 0.9;
+    const angleStep = Math.PI / 6;
+    const angles = [-angleStep * 1.2, 0, angleStep * 1.2];
+    angles.forEach((ang, idx) => {
+      const baseX = cx + Math.sin(ang) * scale * 0.3;
+      const baseY = crossY + Math.cos(ang) * scale * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(baseX - scale * 0.8, baseY - scale * 0.5);
+      ctx.lineTo(baseX, baseY);
+      ctx.lineTo(baseX - scale * 0.6, baseY + scale * 0.7);
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(baseX + scale * 0.9, baseY - scale * 0.2);
+      ctx.stroke();
+    });
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(cx - cs, crossY);
+    ctx.lineTo(cx + cs, crossY);
+    ctx.moveTo(cx, crossY - cs);
+    ctx.lineTo(cx, crossY + cs);
+    ctx.stroke();
+  }
 
   for (let i = 0; i < 8; i++) {
     const seed = i * 97 + 17;
